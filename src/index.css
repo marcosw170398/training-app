@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #0b0f14;
+  --color-surface: #131a22;
+  --color-surface-2: #1b242e;
+  --color-border: #26323f;
+  --color-text: #e8eef5;
+  --color-muted: #8ca0b6;
+  --color-accent: #38bdf8;
+  --color-accent-ink: #04212f;
+  --color-warmup: #a78bfa;
+  --color-rampup: #fbbf24;
+  --color-main: #34d399;
+  --color-danger: #fb7185;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Campos numéricos sem as setinhas — atrapalham o toque com uma mão. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  button {
+    font: inherit;
+    touch-action: manipulation;
+  }
+}
+
+@utility safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@utility safe-bottom {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
