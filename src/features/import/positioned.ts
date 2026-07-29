@@ -32,6 +32,12 @@ export function isHighlightColor(color: PositionedText['color']): boolean {
   return r > 120 && g > 90 && b < 110 && r - b > 55 && g - b > 30
 }
 
+/** Faixa vertical onde o layout pinta o nome do exercício em dourado. */
+export interface HighlightBand {
+  top: number
+  bottom: number
+}
+
 export interface PositionedPage {
   pageNumber: number
   width: number
@@ -39,6 +45,15 @@ export interface PositionedPage {
   items: PositionedText[]
   /** De onde veio o texto desta página. */
   source: 'text' | 'ocr'
+  /**
+   * Faixas douradas detectadas na página renderizada, em pontos do PDF.
+   *
+   * É o limite EXATO de cada cartão de exercício, obtido da cor e não do texto
+   * — então sobrevive intacto por mais que o OCR erre letras. Sem isso, uma
+   * linha de série perdida faz todas as seguintes escorregarem para o
+   * exercício vizinho.
+   */
+  highlightBands?: HighlightBand[]
 }
 
 export const centerX = (item: PositionedText): number => item.x + item.width / 2

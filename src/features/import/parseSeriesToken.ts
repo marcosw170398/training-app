@@ -82,6 +82,16 @@ export function parseSeriesTokens(linha: string): SeriesToken[] {
       continue
     }
 
+    // "x8312" — o OCR comeu o "1" antes do x e colou a faixa.
+    const semContagem = reparado.match(/^\s*[xX×]\s*(\d+)\s*$/)
+    if (semContagem) {
+      const recuperada = repararFaixaColada(semContagem[1])
+      if (recuperada) {
+        tokens.push({ count: 1, target: recuperada, suffix })
+        continue
+      }
+    }
+
     // "(até a falha)", "(100 reps)" — texto livre, uma série.
     const texto = bruto.replace(/\s+/g, ' ').trim()
     if (/\d/.test(texto) || /falha|reps|segundos|minutos/i.test(texto)) {

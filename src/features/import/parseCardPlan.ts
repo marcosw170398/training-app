@@ -52,16 +52,17 @@ function limparRuido(texto: string): string {
 }
 
 /** Títulos da apostila que não são exercício ("TREINO 4 VEZES NA SEMANA"). */
-const RE_CABECALHO = /^(treino|sugest[aã]o|divis[aã]o|semana|obs|aten[çc][aã]o)\b/i
+const RE_CABECALHO =
+  /^(treino|sugest[aã]o|divis[aã]o|semana|obs|aten[çc][aã]o|n[uú]mero|repeti[çc])/i
 
 /** Uma linha só é nome plausível se tiver alguma palavra de verdade. */
 function pareceNome(texto: string): boolean {
   if (texto.length < 4) return false
   if (RE_INTERVALO.test(texto) || RE_TEM_SERIE.test(texto)) return false
   if (RE_CABECALHO.test(texto)) return false
-  // Linha inteira em maiúsculas com muitas palavras é título de seção, não
-  // nome de exercício.
-  if (texto === texto.toUpperCase() && texto.split(/\s+/).length > 3) return false
+  // Linha inteira em maiúsculas é título de seção, não nome de exercício —
+  // o layout escreve os exercícios em caixa mista.
+  if (texto === texto.toUpperCase() && /\p{L}{3,}/u.test(texto)) return false
   return /\p{L}{4,}/u.test(texto)
 }
 
@@ -80,6 +81,7 @@ export function parseCardPlanFromPages(
   options: { name: string },
 ): ParsedPlan {
   const warnings: string[] = []
+  const semSeries: string[] = []
   const workouts: ParsedWorkout[] = []
   let treinoAtual: ParsedWorkout | null = null
   let usouMarcadorDeTreino = false
@@ -101,6 +103,89 @@ export function parseCardPlanFromPages(
     const itens =
       page.source === 'ocr' ? page.items.filter((item) => item.confidence >= 0.5) : page.items
     const linhas = toLines(itens, page.source === 'ocr' ? 6 : 3)
+    /**
+     * Para SÉRIES vale a pena aceitar palavra de baixa confiança: o formato
+     * `(3x 8 a 12)` é distintivo o bastante para o ruído de fundo não imitar,
+     * e perder a série é pior que arriscar uma leitura duvidosa — que aparece
+     * na conferência de qualquer jeito.
+     */
+    const linhasCompletas = toLines(page.items, page.source === 'ocr' ? 6 : 3)
+
+    // Caminho preferido: as faixas douradas dão a fronteira exata de cada
+    // cartão, então nome, intervalo e séries não têm como escorregar de
+    // exercício. A heurística por texto abaixo só entra quando não há cor.
+    const faixas = page.highlightBands ?? []
+    if (faixas.length) {
+      for (let indice = 0; indice < faixas.length; indice += 1) {
+        const faixa = faixas[indice]
+        const limiteInferior = faixas[indice + 1]?.top ?? Number.POSITIVE_INFINITY
+
+        const linhasDoNome = linhas.filter((l) => l.y >= faixa.top - 5 && l.y <= faixa.bottom + 8)
+        const nome = limparRuido(linhasDoNome.map((l) => l.text).join(' '))
+        if (!nome || !pareceNome(nome)) continue
+
+        const corpo = linhas.filter((l) => l.y > faixa.bottom + 8 && l.y < limiteInferior - 5)
+
+        const descricao: string[] = []
+        let intervalo: string | null = null
+        const tokensSerie = []
+        let confianca = 1
+
+        for (const linha of corpo) {
+          const limpo = limparRuido(linha.text)
+          if (!limpo) continue
+          const confiancaLinha = linha.items.length
+            ? linha.items.reduce((soma, item) => soma + item.confidence, 0) / linha.items.length
+            : 1
+          confianca = Math.min(confianca, confiancaLinha)
+
+          if (RE_INTERVALO.test(limpo)) {
+            intervalo = limpo
+            continue
+          }
+          if (RE_TEM_SERIE.test(limpo)) continue
+          descricao.push(limpo)
+        }
+
+        for (const linha of linhasCompletas) {
+          if (linha.y <= faixa.bottom + 8 || linha.y >= limiteInferior - 5) continue
+          const limpo = limparRuido(linha.text)
+          if (limpo && RE_TEM_SERIE.test(limpo)) tokensSerie.push(...parseSeriesTokens(limpo))
+        }
+
+        // A faixa dourada É a prova de que existe um exercício aqui. Se o OCR
+        // perdeu a linha de séries, o exercício entra vazio e aparece marcado
+        // na conferência — sumir em silêncio esconderia a falha do usuário.
+        if (tokensSerie.length === 0) semSeries.push(nome)
+
+        const rest = parseRest(intervalo ? limparIntervalo(intervalo) : null)
+        const listaSeries: ParsedSeries[] = []
+        for (const token of tokensSerie) {
+          for (let i = 0; i < token.count; i++) {
+            const ultima = i === token.count - 1
+            listaSeries.push({
+              seriesNumber: listaSeries.length + 1,
+              targetText: ultima && token.suffix ? `${token.target} ${token.suffix}` : token.target,
+              restSecondsMin: rest.restSecondsMin,
+              restSecondsMax: rest.restSecondsMax,
+              restNote: rest.restNote,
+            })
+          }
+        }
+
+        if (!treinoAtual) abrirTreino(`Treino ${String.fromCharCode(65 + workouts.length)}`)
+        treinoAtual!.exercises.push({
+          name: nome,
+          section: classificarSecao(nome),
+          technique: descricao.join(' ').trim() || null,
+          series: listaSeries,
+          confidence: confianca,
+        })
+      }
+
+      if (!usouMarcadorDeTreino) treinoAtual = null
+      continue
+    }
 
     let cartao: CartaoEmMontagem = { linhas: [], intervalo: null, confianca: 1 }
     const series: string[] = []
@@ -195,6 +280,12 @@ export function parseCardPlanFromPages(
   if (!usouMarcadorDeTreino && comExercicios.length > 1) {
     warnings.push(
       'O PDF não traz "Treino A/B/C" legível, então dividi um treino por página — confira e renomeie.',
+    )
+  }
+
+  if (semSeries.length) {
+    warnings.push(
+      `${semSeries.length} exercício(s) foram identificados mas ficaram sem séries legíveis (${semSeries.slice(0, 4).join(', ')}${semSeries.length > 4 ? '…' : ''}) — preencha antes de salvar.`,
     )
   }
 

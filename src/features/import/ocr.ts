@@ -157,6 +157,68 @@ function corDoTraco(
   return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) }
 }
 
+/**
+ * O dourado que o layout usa no nome do exercício.
+ *
+ * Medido nas páginas: rgb(155..205, 121..161, 39..49). O `g - b` alto é o que
+ * separa do vermelho do rodapé, rgb(255,51,51), que passaria por qualquer
+ * teste baseado só em `r - b`.
+ */
+function ehDourado(r: number, g: number, b: number): boolean {
+  return r > 100 && g > 70 && b < 100 && r >= g && g > b && r - b > 60 && g - b > 40
+}
+
+/**
+ * Localiza as faixas horizontais douradas da página.
+ *
+ * Trabalha sobre os pixels, não sobre o texto: é por isso que funciona mesmo
+ * quando o OCR degrada. Cada faixa marca o começo de um cartão de exercício.
+ */
+function detectarFaixasDouradas(
+  canvas: HTMLCanvasElement,
+  escala: number,
+): { top: number; bottom: number }[] {
+  const contexto = canvas.getContext('2d')
+  if (!contexto) return []
+
+  const { width, height } = canvas
+  const dados = contexto.getImageData(0, 0, width, height).data
+  // Uma linha de texto dourado pinta muito mais que meia dúzia de pixels;
+  // o limiar corta reflexo de textura e artefato de compressão.
+  const minPixels = Math.max(10, Math.round(width * 0.01))
+
+  const linhasDouradas: boolean[] = new Array(height).fill(false)
+  for (let y = 0; y < height; y++) {
+    let contagem = 0
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4
+      if (ehDourado(dados[i], dados[i + 1], dados[i + 2])) contagem += 1
+    }
+    linhasDouradas[y] = contagem >= minPixels
+  }
+
+  const faixas: { top: number; bottom: number }[] = []
+  let inicio = -1
+  for (let y = 0; y <= height; y++) {
+    if (y < height && linhasDouradas[y]) {
+      if (inicio < 0) inicio = y
+      continue
+    }
+    if (inicio >= 0) {
+      // Nome pode ocupar duas linhas: emenda faixas quase coladas.
+      const anterior = faixas.at(-1)
+      if (anterior && inicio - anterior.bottom * escala <= 12) {
+        anterior.bottom = (y - 1) / escala
+      } else if (y - 1 - inicio >= 5) {
+        faixas.push({ top: inicio / escala, bottom: (y - 1) / escala })
+      }
+      inicio = -1
+    }
+  }
+
+  return faixas
+}
+
 export interface OcrOptions {
   /**
    * Largura de renderização em pixels.
@@ -188,6 +250,7 @@ export async function ocrPage(
   // justamente o sinal (o dourado do nome do exercício).
   const contexto = rendered.canvas.getContext('2d')
   const imagemOriginal = contexto?.getImageData(0, 0, rendered.canvas.width, rendered.canvas.height)
+  const highlightBands = detectarFaixasDouradas(rendered.canvas, rendered.scale)
 
   const limiar = options.threshold ?? 0
   if (limiar > 0) binarizar(rendered.canvas, limiar)
@@ -222,5 +285,6 @@ export async function ocrPage(
     height: rendered.height,
     items,
     source: 'ocr',
+    highlightBands,
   }
 }
