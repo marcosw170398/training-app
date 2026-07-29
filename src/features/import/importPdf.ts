@@ -2,6 +2,7 @@ import type { PositionedPage } from './positioned'
 import { extractTextPage, openPdf } from './readPdf'
 import { ocrPage, terminateOcr } from './ocr'
 import { parsePlanFromPages } from './parsePlan'
+import { parseCardPlanFromPages } from './parseCardPlan'
 import type { ParsedPlan } from './parsedPlan'
 
 export interface ImportProgress {
@@ -64,7 +65,16 @@ export async function readPlanFromPdf(
   }
 
   onProgress?.({ stage: 'interpretando', current: total, total })
-  const plano = parsePlanFromPages(pages, { name: nomeDoArquivo(file) })
+
+  // Dois layouts, dois parsers. Tento a tabela primeiro (é o formato exato,
+  // com cabeçalho de colunas); se ela não reconhecer nada, o PDF é do layout
+  // em cartões, ancorado nas linhas "Intervalo:".
+  const nome = nomeDoArquivo(file)
+  let plano = parsePlanFromPages(pages, { name: nome })
+  if (plano.workouts.length === 0) {
+    const emCartoes = parseCardPlanFromPages(pages, { name: nome })
+    if (emCartoes.workouts.length > 0) plano = emCartoes
+  }
 
   if (handle.mode === 'ocr') {
     const lidos = pages.flatMap((p) => p.items)

@@ -16,6 +16,20 @@ export interface PositionedText {
   height: number
   /** 0..1 — só o OCR preenche; a camada de texto é sempre 1. */
   confidence: number
+  /**
+   * Cor média do texto na página renderizada (só na rota de OCR).
+   *
+   * É o sinal mais confiável que existe nesses PDFs: o layout marca o nome do
+   * exercício em amarelo, e cor não se corrompe quando o OCR erra a letra.
+   */
+  color?: { r: number; g: number; b: number }
+}
+
+/** O destaque dourado que o plano usa no nome do exercício. */
+export function isHighlightColor(color: PositionedText['color']): boolean {
+  if (!color) return false
+  const { r, g, b } = color
+  return r > 120 && g > 90 && b < 110 && r - b > 55 && g - b > 30
 }
 
 export interface PositionedPage {

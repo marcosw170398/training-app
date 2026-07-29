@@ -99,6 +99,64 @@ function binarizar(canvas: HTMLCanvasElement, limiar: number): void {
   context.putImageData(imagem, 0, 0)
 }
 
+/**
+ * Cor média do TRAÇO do texto dentro de uma caixa.
+ *
+ * Tirar a média da caixa inteira devolveria a cor do fundo, que é a maioria dos
+ * pixels. Então primeiro descubro o fundo (a luminância mais frequente) e só
+ * então faço a média dos pixels que se afastam dele — que é a tinta.
+ */
+function corDoTraco(
+  imagem: ImageData,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): { r: number; g: number; b: number } | undefined {
+  const largura = imagem.width
+  const esq = Math.max(0, Math.floor(x0))
+  const dir = Math.min(largura - 1, Math.ceil(x1))
+  const topo = Math.max(0, Math.floor(y0))
+  const base = Math.min(imagem.height - 1, Math.ceil(y1))
+  if (dir <= esq || base <= topo) return undefined
+
+  const dados = imagem.data
+  const histograma = new Array(16).fill(0)
+  const luminancias: number[] = []
+
+  for (let y = topo; y <= base; y++) {
+    for (let x = esq; x <= dir; x++) {
+      const i = (y * largura + x) * 4
+      const lum = 0.299 * dados[i] + 0.587 * dados[i + 1] + 0.114 * dados[i + 2]
+      luminancias.push(lum)
+      histograma[Math.min(15, Math.floor(lum / 16))] += 1
+    }
+  }
+  if (!luminancias.length) return undefined
+
+  const baldeFundo = histograma.indexOf(Math.max(...histograma))
+  const lumFundo = baldeFundo * 16 + 8
+
+  let r = 0
+  let g = 0
+  let b = 0
+  let n = 0
+  let indice = 0
+  for (let y = topo; y <= base; y++) {
+    for (let x = esq; x <= dir; x++, indice++) {
+      if (Math.abs(luminancias[indice] - lumFundo) < 60) continue
+      const i = (y * largura + x) * 4
+      r += dados[i]
+      g += dados[i + 1]
+      b += dados[i + 2]
+      n += 1
+    }
+  }
+  if (n < 4) return undefined
+
+  return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) }
+}
+
 export interface OcrOptions {
   /**
    * Largura de renderização em pixels.
@@ -125,6 +183,12 @@ export async function ocrPage(
   options: OcrOptions = {},
 ): Promise<PositionedPage> {
   const rendered = await renderPageToCanvas(doc, pageNumber, options.targetWidth ?? 1700)
+
+  // A amostra de cor sai da renderização ORIGINAL: binarizar destruiria
+  // justamente o sinal (o dourado do nome do exercício).
+  const contexto = rendered.canvas.getContext('2d')
+  const imagemOriginal = contexto?.getImageData(0, 0, rendered.canvas.width, rendered.canvas.height)
+
   const limiar = options.threshold ?? 0
   if (limiar > 0) binarizar(rendered.canvas, limiar)
   const worker = await getWorker((pct) =>
@@ -142,6 +206,7 @@ export async function ocrPage(
     const { x0, y0, x1, y1 } = word.bbox
     items.push({
       text: texto,
+      color: imagemOriginal ? corDoTraco(imagemOriginal, x0, y0, x1, y1) : undefined,
       // De volta para pontos do PDF: o parser inteiro raciocina nessa unidade.
       x: x0 / rendered.scale,
       y: ((y0 + y1) / 2) / rendered.scale,
