@@ -34,7 +34,34 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // O motor de OCR (~5 MB) fica FORA do precache: quem só usa PDF com
+        // camada de texto nunca baixa esse peso. Ele é buscado na primeira
+        // importação de PDF digitalizado e cacheado a partir daí.
+        globIgnores: ['**/tesseract/**'],
         navigateFallback: '/index.html',
+        runtimeCaching: [
+          {
+            // Chunks carregados sob demanda (tela de importação, worker do
+            // pdf.js) ficam fora do precache — mas precisam sobreviver offline
+            // depois do primeiro uso.
+            urlPattern: ({ url }) => url.pathname.startsWith('/assets/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'chunks-sob-demanda',
+              expiration: { maxEntries: 40 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/tesseract/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ocr-engine',
+              expiration: { maxEntries: 12 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),

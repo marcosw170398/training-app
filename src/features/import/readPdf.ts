@@ -5,23 +5,32 @@ import type { PositionedPage, PositionedText } from './positioned'
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
 
 /**
- * Abaixo disto a página não tem texto de verdade — é imagem escaneada, e só o
- * OCR consegue lê-la. O rodapé/marca d'água sozinho já rende alguns itens, daí
- * o limiar não ser zero.
+ * Uma página com pelo menos esta quantidade de itens carrega conteúdo de
+ * verdade (uma tabela do plano rende ~150). Capa e página de instruções ficam
+ * bem abaixo disso.
  */
 const MIN_ITENS_TEXTO = 20
 
 export interface PdfPageProbe {
   pageNumber: number
-  hasTextLayer: boolean
+  /** Tem conteúdo textual suficiente para valer o parse. */
+  hasContent: boolean
   textItems: number
 }
 
 export interface PdfDocumentHandle {
   numPages: number
   probes: PdfPageProbe[]
-  /** Quantas páginas precisariam de OCR. */
-  imagePages: number
+  /**
+   * Modo do DOCUMENTO, não da página.
+   *
+   * Decidir por página faria a capa e a folha de instruções — que têm pouco
+   * texto mas não são digitalizadas — irem parar no OCR, gastando um minuto
+   * cada e rotulando um plano perfeitamente legível como "lido por OCR".
+   */
+  mode: 'text' | 'ocr'
+  /** Páginas sem nenhum texto num documento que, no geral, tem camada de texto. */
+  emptyPages: number[]
   doc: pdfjs.PDFDocumentProxy
 }
 
@@ -36,13 +45,18 @@ export async function openPdf(file: File): Promise<PdfDocumentHandle> {
     const uteis = content.items.filter(
       (item) => 'str' in item && item.str.trim() && !/licenciado para/i.test(item.str),
     ).length
-    probes.push({ pageNumber: n, hasTextLayer: uteis >= MIN_ITENS_TEXTO, textItems: uteis })
+    probes.push({ pageNumber: n, hasContent: uteis >= MIN_ITENS_TEXTO, textItems: uteis })
   }
+
+  // Basta UMA página com conteúdo textual para o documento inteiro ser tratado
+  // como digital: o plano está no texto, e o resto são capas e ilustrações.
+  const mode = probes.some((p) => p.hasContent) ? 'text' : 'ocr'
 
   return {
     numPages: doc.numPages,
     probes,
-    imagePages: probes.filter((p) => !p.hasTextLayer).length,
+    mode,
+    emptyPages: mode === 'text' ? probes.filter((p) => p.textItems === 0).map((p) => p.pageNumber) : [],
     doc,
   }
 }
@@ -84,12 +98,27 @@ export async function extractTextPage(
   }
 }
 
-/** Renderiza a página num canvas — entrada do OCR. */
+export interface RenderedPage {
+  canvas: HTMLCanvasElement
+  /** Pixels do canvas por ponto do PDF — o OCR usa para voltar à escala do PDF. */
+  scale: number
+  /** Dimensões em pontos do PDF. */
+  width: number
+  height: number
+}
+
+/**
+ * Renderiza a página num canvas — entrada do OCR.
+ *
+ * Devolve a escala junto: as coordenadas do OCR saem em pixels do canvas, e o
+ * parser trabalha em pontos do PDF. Sem converter de volta, os limiares de
+ * linha e de fim de tabela deixariam de valer.
+ */
 export async function renderPageToCanvas(
   doc: pdfjs.PDFDocumentProxy,
   pageNumber: number,
-  targetWidth = 1600,
-): Promise<HTMLCanvasElement> {
+  targetWidth = 1700,
+): Promise<RenderedPage> {
   const page = await doc.getPage(pageNumber)
   const base = page.getViewport({ scale: 1 })
   const scale = targetWidth / base.width
@@ -103,5 +132,5 @@ export async function renderPageToCanvas(
   if (!context) throw new Error('Não foi possível criar o canvas para renderizar o PDF')
 
   await page.render({ canvas, canvasContext: context, viewport }).promise
-  return canvas
+  return { canvas, scale, width: base.width, height: base.height }
 }

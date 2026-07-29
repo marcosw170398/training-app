@@ -107,7 +107,10 @@ export function parsePlanFromPages(pages: PositionedPage[], options: ParseOption
   }
 
   for (const page of pages) {
-    const linhas = toLines(page.items)
+    // O OCR mede a altura de cada palavra, então o centro vertical oscila mais
+    // que a baseline exata da camada de texto — a tolerância de linha precisa
+    // acompanhar, senão uma linha vira duas.
+    const linhas = toLines(page.items, page.source === 'ocr' ? 6 : 3)
 
     let i = 0
     while (i < linhas.length) {
@@ -268,5 +271,6 @@ export function parsePlanFromPages(pages: PositionedPage[], options: ParseOption
     workouts,
     warnings,
     source: fontes.has('ocr') ? 'ocr' : 'text',
+    confidence: 1,
   }
 }

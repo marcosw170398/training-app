@@ -31,6 +31,14 @@ export const router = createBrowserRouter([
         ],
       },
       // Telas de foco: sem nav, para não competir com a tarefa em curso.
+      // Carregada sob demanda: o pdf.js e o motor de OCR pesam mais que o app
+      // inteiro, e quem nunca importa um PDF não deve pagar por eles.
+      {
+        path: '/importar',
+        lazy: async () => ({
+          Component: (await import('@/features/import/ImportScreen')).ImportScreen,
+        }),
+      },
       { path: '/planos/:planId', element: <PlanEditorScreen /> },
       { path: '/planos/:planId/t/:workoutId', element: <WorkoutEditorScreen /> },
       { path: '/treinar/:workoutId', element: <StartSessionScreen /> },

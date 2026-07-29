@@ -41,16 +41,20 @@ export function PlansScreen() {
           title="Nenhum plano ainda"
           description="Crie um plano fixo (A, B, C…) ou periodizado (semanas numeradas)."
           action={
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => {
-                setEditing(undefined)
-                setFormOpen(true)
-              }}
-            >
-              Criar plano
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button variant="primary" size="lg" onClick={() => navigate('/importar')}>
+                Importar PDF do treinador
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => {
+                  setEditing(undefined)
+                  setFormOpen(true)
+                }}
+              >
+                Criar plano do zero
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -119,17 +123,21 @@ export function PlansScreen() {
       )}
 
       {plans.length > 0 ? (
-        <Button
-          full
-          size="lg"
-          className="mt-6"
-          onClick={() => {
-            setEditing(undefined)
-            setFormOpen(true)
-          }}
-        >
-          Novo plano
-        </Button>
+        <div className="mt-6 flex flex-col gap-2">
+          <Button full size="lg" variant="primary" onClick={() => navigate('/importar')}>
+            Importar PDF do treinador
+          </Button>
+          <Button
+            full
+            size="lg"
+            onClick={() => {
+              setEditing(undefined)
+              setFormOpen(true)
+            }}
+          >
+            Novo plano do zero
+          </Button>
+        </div>
       ) : null}
 
       <PlanFormSheet

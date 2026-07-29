@@ -38,6 +38,8 @@ export interface ParsedPlan {
   workouts: ParsedWorkout[]
   warnings: string[]
   source: 'text' | 'ocr'
+  /** Confiança média da leitura; 1 quando veio da camada de texto. */
+  confidence: number
 }
 
 export function countExercises(plan: ParsedPlan): number {

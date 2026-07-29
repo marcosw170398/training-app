@@ -112,6 +112,9 @@ export function MoreScreen() {
         <Button full variant="secondary" onClick={() => fileInput.current?.click()}>
           Importar arquivo JSON
         </Button>
+        <Button full variant="secondary" onClick={() => navigate('/importar')}>
+          Importar plano em PDF
+        </Button>
         <input
           ref={fileInput}
           type="file"
