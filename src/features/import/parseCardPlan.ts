@@ -4,6 +4,7 @@ import type { PositionedPage } from './positioned'
 import { toLines } from './table'
 import { parseRest } from './parseRest'
 import { limparIntervalo, parseSeriesTokens } from './parseSeriesToken'
+import { matchExerciseName } from './exerciseDictionary'
 import type { ParsedExercise, ParsedPlan, ParsedSeries, ParsedWorkout } from './parsedPlan'
 
 /**
@@ -136,8 +137,13 @@ export function parseCardPlanFromPages(
         // Margem folgada embaixo: descidas de letra ("pé") caem alguns pontos
         // abaixo da faixa colorida e sumiam do nome.
         const linhasDoNome = linhas.filter((l) => l.y >= faixa.top - 5 && l.y <= faixa.bottom + 13)
-        const nome = limparRuido(linhasDoNome.map((l) => l.text).join(' '))
-        if (!nome || !pareceNome(nome)) continue
+        const nomeLido = limparRuido(linhasDoNome.map((l) => l.text).join(' '))
+        if (!nomeLido || !pareceNome(nomeLido)) continue
+
+        // Encaixa no vocabulário do plano quando houver candidato bom o
+        // bastante — é o que conserta "Pulleyfrente" e "Lombarno banco romano".
+        const encaixe = page.source === 'ocr' ? matchExerciseName(nomeLido) : null
+        const nome = encaixe?.name ?? nomeLido
 
         const corpo = linhas.filter((l) => l.y > faixa.bottom + 13 && l.y < limiteInferior - 5)
 
@@ -191,6 +197,7 @@ export function parseCardPlanFromPages(
         if (!treinoAtual) abrirTreino(`Treino ${String.fromCharCode(65 + workouts.length)}`)
         treinoAtual!.exercises.push({
           name: nome,
+          originalName: encaixe && encaixe.name !== nomeLido ? nomeLido : undefined,
           section: classificarSecao(nome),
           technique: descricao.join(' ').trim() || null,
           series: listaSeries,

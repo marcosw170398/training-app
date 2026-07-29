@@ -97,6 +97,14 @@ export function ImportExerciseRow({
         <p className="mt-1 text-xs text-muted">técnica: {exercise.technique}</p>
       ) : null}
 
+      {/* Transparência sobre a correção: o usuário precisa poder discordar do
+          encaixe no dicionário. */}
+      {exercise.originalName ? (
+        <p className="mt-1 text-xs text-muted">
+          corrigido pelo dicionário · o PDF foi lido como “{exercise.originalName}”
+        </p>
+      ) : null}
+
       <div className="mt-2 flex items-center gap-2">
         <span className="shrink-0 text-xs text-muted">Descanso</span>
         <input

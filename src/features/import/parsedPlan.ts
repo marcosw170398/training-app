@@ -17,6 +17,8 @@ export interface ParsedSeries {
 
 export interface ParsedExercise {
   name: string
+  /** Preenchido quando o dicionário corrigiu o nome; guarda o que o OCR leu. */
+  originalName?: string
   section: Section
   technique: string | null
   series: ParsedSeries[]
