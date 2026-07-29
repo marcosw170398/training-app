@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { getProfileState, updateProfileState } from '@/db/repositories/profiles.repo'
+import { getProfileState, resetTutorial, updateProfileState } from '@/db/repositories/profiles.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { downloadBackup } from '@/features/backup/exportBackup'
 import { importBackup, type ImportResult } from '@/features/backup/importBackup'
@@ -123,6 +123,19 @@ export function MoreScreen() {
             event.target.value = ''
           }}
         />
+      </Card>
+
+      <h2 className="mb-2 mt-6 text-sm font-medium text-muted">Ajuda</h2>
+      <Card>
+        <Button
+          full
+          onClick={async () => {
+            await resetTutorial(profile.id)
+            navigate('/home')
+          }}
+        >
+          Ver o tutorial novamente
+        </Button>
       </Card>
 
       <h2 className="mb-2 mt-6 text-sm font-medium text-muted">Perfis</h2>

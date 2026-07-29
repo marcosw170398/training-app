@@ -35,6 +35,7 @@ function defaultState(profileId: Id): ProfileState {
     soundEnabled: true,
     vibrationEnabled: true,
     keepScreenAwake: true,
+    tutorialSeenAt: null,
   }
 }
 
@@ -100,6 +101,15 @@ export async function updateProfileState(
 
 export async function setActivePlan(profileId: Id, planId: Id | null): Promise<void> {
   await updateProfileState(profileId, { activePlanId: planId })
+}
+
+export async function markTutorialSeen(profileId: Id): Promise<void> {
+  await updateProfileState(profileId, { tutorialSeenAt: Date.now() })
+}
+
+/** Faz o tutorial aparecer de novo na próxima vez que este perfil abrir a home. */
+export async function resetTutorial(profileId: Id): Promise<void> {
+  await updateProfileState(profileId, { tutorialSeenAt: null })
 }
 
 /** Avança/retrocede a semana do plano periodizado e reinicia o contador de dias. */

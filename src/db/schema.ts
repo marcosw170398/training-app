@@ -82,6 +82,13 @@ export interface ProfileState {
   soundEnabled: boolean
   vibrationEnabled: boolean
   keepScreenAwake: boolean
+  /**
+   * Quando este perfil viu o tutorial. `null` = nunca viu.
+   *
+   * Fica no perfil, não no dispositivo: o celular é compartilhado, então a
+   * segunda pessoa a usar o app precisa ver a introdução na primeira vez dela.
+   */
+  tutorialSeenAt: number | null
 }
 
 export interface TrainingPlan {

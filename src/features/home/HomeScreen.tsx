@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { NO_WEEK, type Workout } from '@/db/schema'
-import { getProfileState, setCurrentWeek } from '@/db/repositories/profiles.repo'
+import { getProfileState, markTutorialSeen, setCurrentWeek } from '@/db/repositories/profiles.repo'
 import { getPlan, listPlans } from '@/db/repositories/plans.repo'
 import { listWorkoutsOfWeek } from '@/db/repositories/workouts.repo'
 import { getInProgressSession, lastSessionByWorkout } from '@/db/repositories/sessions.repo'
@@ -13,6 +13,7 @@ import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Splash } from '@/app/Splash'
+import { TutorialOverlay } from '@/features/onboarding/TutorialOverlay'
 
 interface WorkoutRow {
   workout: Workout
@@ -221,6 +222,11 @@ export function HomeScreen() {
           )}
         </>
       )}
+      {/* Primeiro acesso DESTE perfil: a home é onde ele chega depois de ser
+          criado, então é aqui que o tutorial aparece. */}
+      {state.tutorialSeenAt === null ? (
+        <TutorialOverlay onFinish={() => markTutorialSeen(profile.id)} />
+      ) : null}
     </Screen>
   )
 }

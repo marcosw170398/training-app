@@ -381,6 +381,7 @@ export async function importBackup(raw: unknown, mode: ImportMode): Promise<Impo
             soundEnabled: true,
             vibrationEnabled: true,
             keepScreenAwake: true,
+            tutorialSeenAt: null,
           })),
         )
       }

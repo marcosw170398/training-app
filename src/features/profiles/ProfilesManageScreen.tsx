@@ -46,8 +46,8 @@ export function ProfilesManageScreen() {
     >
       {profiles === undefined ? null : isEmpty ? (
         <EmptyState
-          title="Nenhum perfil ainda"
-          description="Cada pessoa tem seu próprio plano e histórico, no mesmo celular."
+          title="Bem-vindo ao Treino"
+          description="Um app de treino que funciona offline e guarda tudo neste aparelho. Comece criando um perfil — o tutorial aparece logo depois."
           action={
             <Button
               variant="primary"
