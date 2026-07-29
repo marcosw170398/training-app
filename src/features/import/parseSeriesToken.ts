@@ -63,7 +63,15 @@ export function parseSeriesTokens(linha: string): SeriesToken[] {
     // Separa "3x 8 a 12" do que vier depois de um "+".
     const maisIndex = bruto.search(/\+/)
     const parteNumerica = maisIndex >= 0 ? bruto.slice(0, maisIndex) : bruto
-    const suffix = maisIndex >= 0 ? bruto.slice(maisIndex).replace(/\s+/g, ' ').trim() : ''
+    const suffix =
+      maisIndex >= 0
+        ? bruto
+            .slice(maisIndex)
+            .replace(/\s+/g, ' ')
+            // "+2 drop" -> "+ 2 drop": o OCR come o espaço depois do sinal.
+            .replace(/^\+\s*/, '+ ')
+            .trim()
+        : ''
 
     const reparado = repararNumeros(parteNumerica)
 

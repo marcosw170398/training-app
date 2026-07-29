@@ -19,7 +19,12 @@ import type { ParsedExercise, ParsedPlan, ParsedSeries, ParsedWorkout } from './
  * "Intervalo:", que sobrevive bem ao OCR mesmo quando o resto degrada.
  */
 
-const RE_INTERVALO = /intervalo\s*:/i
+/**
+ * Dois-pontos OPCIONAL: o plano alterna entre "Intervalo: 45 segundos" e
+ * "Intervalo 1 a 2 minutos". Exigir o `:` fazia o segundo caso virar descrição
+ * e o exercício ficar sem descanso.
+ */
+const RE_INTERVALO = /intervalo\s*:?\s*\d/i
 const RE_TREINO = /^treino\s*([a-h])$/i
 const RE_TEM_SERIE = /\(\s*\d+\s*[xX×]/
 
@@ -32,21 +37,29 @@ const RE_TEM_SERIE = /\(\s*\d+\s*[xX×]/
 function limparRuido(texto: string): string {
   const tokens = texto.split(/\s+/).filter(Boolean)
 
-  const ehLixo = (token: string) => {
+  const ehLixo = (token: string, ponta: 'inicio' | 'fim') => {
     if (token.length > 3) return false
-    // Mantém números soltos só quando parecem conteúdo (ex: "30º").
-    if (/^\d+[º°]$/.test(token)) return false
+    // Dígito ou parêntese é conteúdo: "(3x", "8a", "12)" são pedaços da série.
+    // Sem esta guarda, a limpeza comia a própria notação de repetições e o
+    // exercício ficava sem séries.
+    if (/[()\d]/.test(token)) {
+      // A única exceção é o marcador hexagonal, que o OCR lê como um dígito
+      // solto no começo da linha.
+      return ponta === 'inicio' && /^\d$/.test(token)
+    }
     return !/^(e|ou|de|da|do|em|com|no|na|kg|s)$/i.test(token)
   }
 
   let inicio = 0
-  while (inicio < tokens.length && ehLixo(tokens[inicio])) inicio += 1
+  while (inicio < tokens.length && ehLixo(tokens[inicio], 'inicio')) inicio += 1
   let fim = tokens.length
-  while (fim > inicio && ehLixo(tokens[fim - 1])) fim -= 1
+  while (fim > inicio && ehLixo(tokens[fim - 1], 'fim')) fim -= 1
 
   return tokens
     .slice(inicio, fim)
-    .filter((token) => !/^[^\p{L}\p{N}]+$/u.test(token))
+    // O "+" é conteúdo: separa os dois movimentos de um bi-set
+    // ("Rosca direta barra + rosca direta corda").
+    .filter((token) => token === '+' || !/^[^\p{L}\p{N}]+$/u.test(token))
     .join(' ')
     .trim()
 }
@@ -120,11 +133,13 @@ export function parseCardPlanFromPages(
         const faixa = faixas[indice]
         const limiteInferior = faixas[indice + 1]?.top ?? Number.POSITIVE_INFINITY
 
-        const linhasDoNome = linhas.filter((l) => l.y >= faixa.top - 5 && l.y <= faixa.bottom + 8)
+        // Margem folgada embaixo: descidas de letra ("pé") caem alguns pontos
+        // abaixo da faixa colorida e sumiam do nome.
+        const linhasDoNome = linhas.filter((l) => l.y >= faixa.top - 5 && l.y <= faixa.bottom + 13)
         const nome = limparRuido(linhasDoNome.map((l) => l.text).join(' '))
         if (!nome || !pareceNome(nome)) continue
 
-        const corpo = linhas.filter((l) => l.y > faixa.bottom + 8 && l.y < limiteInferior - 5)
+        const corpo = linhas.filter((l) => l.y > faixa.bottom + 13 && l.y < limiteInferior - 5)
 
         const descricao: string[] = []
         let intervalo: string | null = null
@@ -148,7 +163,7 @@ export function parseCardPlanFromPages(
         }
 
         for (const linha of linhasCompletas) {
-          if (linha.y <= faixa.bottom + 8 || linha.y >= limiteInferior - 5) continue
+          if (linha.y <= faixa.bottom + 13 || linha.y >= limiteInferior - 5) continue
           const limpo = limparRuido(linha.text)
           if (limpo && RE_TEM_SERIE.test(limpo)) tokensSerie.push(...parseSeriesTokens(limpo))
         }
