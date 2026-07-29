@@ -1,8 +1,11 @@
 /**
- * Interpreta a notação de série do plano em cartões: `(1x15 a 20)`.
+ * Interpreta a notação de série do plano em cartões.
  *
- * Lê-se "1 série de 15 a 20 repetições" — o número antes do `x` é a QUANTIDADE
- * de séries, então `(3x 8 a 12)` vira três séries iguais.
+ * Antes do `x` vem sempre a QUANTIDADE de séries; depois, as repetições:
+ *
+ *   (1x15 a 20) -> 1 série de 15 a 20 repetições
+ *   (3x 8 a 12) -> 3 séries de 8 a 12
+ *   (1x15)      -> 1 série de 15 repetições exatas
  */
 export interface SeriesToken {
   /** Quantas séries este token representa. */
@@ -21,7 +24,13 @@ export interface SeriesToken {
  * trecho dos números: aplicá-la ao sufixo transformaria "drop" em "dr0p".
  */
 function repararNumeros(trecho: string): string {
-  return trecho.replace(/[IlD|]/g, '1').replace(/[OoQ]/g, '0')
+  return (
+    trecho
+      .replace(/[IlD|]/g, '1')
+      .replace(/[OoQ]/g, '0')
+      // "2xX15320": o OCR costuma duplicar o separador de séries.
+      .replace(/[xX×]{2,}/g, 'x')
+  )
 }
 
 /**
