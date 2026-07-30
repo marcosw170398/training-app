@@ -294,8 +294,29 @@ export function SessionScreen() {
     </div>
   )
 
-  const doneCount = logs.length
   const isOpen = session.finishedAt === IN_PROGRESS
+
+  /**
+   * Situação por EXERCÍCIO, não por série.
+   *
+   * No fim do treino o que importa é "fiz tudo?", e a contagem de séries não
+   * responde isso: 8 séries podem ser 3 exercícios completos ou 8 exercícios
+   * pela metade. Só entram os exercícios que registram carga — a preparação é
+   * contada à parte, com o próprio "feito".
+   */
+  const statusExercicios = exercises
+    .filter((exercise) => exercise.section !== 'warmup')
+    .map((exercise) => {
+      const rows = rowsFor(exercise)
+      const feitas = rows.filter((row) =>
+        logsByKey.has(logKey(exercise.id, row.seriesNumber)),
+      ).length
+      return { exercise, feitas, total: rows.length }
+    })
+
+  const concluidos = statusExercicios.filter((item) => item.total > 0 && item.feitas === item.total)
+  const pendentes = statusExercicios.filter((item) => item.total === 0 || item.feitas < item.total)
+  const preparacaoPendente = warmups.length - session.warmupDone.length
 
   return (
     <div onPointerDown={unlockAudio}>
@@ -305,7 +326,7 @@ export function SessionScreen() {
           <>
             {session.weekNumber ? `Semana ${String(session.weekNumber).padStart(2, '0')} · ` : ''}
             <Elapsed startedAt={session.startedAt} running={isOpen} />
-            {` · ${doneCount} série(s)`}
+            {` · ${concluidos.length}/${statusExercicios.length} exercícios`}
           </>
         }
         back="/home"
@@ -594,8 +615,41 @@ export function SessionScreen() {
       <ConfirmDialog
         open={finishOpen}
         title="Encerrar treino?"
-        confirmLabel="Encerrar"
-        description={`${doneCount} série(s) registrada(s). Você pode reabrir pelo histórico se precisar.`}
+        confirmLabel={pendentes.length ? 'Encerrar mesmo assim' : 'Encerrar'}
+        description={
+          <>
+            <p className="text-text">
+              {concluidos.length} de {statusExercicios.length} exercício(s) concluído(s).
+            </p>
+
+            {pendentes.length ? (
+              <div className="mt-3 rounded-xl border border-rampup/40 bg-rampup/10 p-3">
+                <p className="mb-1 font-medium text-rampup">
+                  {pendentes.length === 1
+                    ? '1 exercício ficou pendente'
+                    : `${pendentes.length} exercícios ficaram pendentes`}
+                </p>
+                <ul className="space-y-0.5 text-sm text-muted">
+                  {pendentes.slice(0, 6).map(({ exercise, feitas, total }) => (
+                    <li key={exercise.id}>
+                      · {exercise.name}{' '}
+                      {total === 0 ? '(sem séries)' : `(${feitas}/${total} séries)`}
+                    </li>
+                  ))}
+                  {pendentes.length > 6 ? <li>· e mais {pendentes.length - 6}…</li> : null}
+                </ul>
+              </div>
+            ) : null}
+
+            {preparacaoPendente > 0 ? (
+              <p className="mt-2 text-sm text-muted">
+                Preparação: {preparacaoPendente} item(ns) sem marcar.
+              </p>
+            ) : null}
+
+            <p className="mt-3 text-sm">Você pode reabrir pelo histórico se precisar.</p>
+          </>
+        }
         onClose={() => setFinishOpen(false)}
         onConfirm={async () => {
           timer.stop()

@@ -21,10 +21,17 @@ export function HistoryScreen() {
   const sessions = useLiveQuery(async () => {
     if (!profileId) return null
     const list = await listSessions(profileId)
-    const counts = await Promise.all(
-      list.map((session) => db.setLogs.where('sessionId').equals(session.id).count()),
+    const resumos = await Promise.all(
+      list.map(async (session) => {
+        const logs = await db.setLogs.where('sessionId').equals(session.id).toArray()
+        return {
+          setCount: logs.length,
+          // Exercícios distintos: é a medida que responde "o que eu treinei".
+          exerciseCount: new Set(logs.map((log) => log.exerciseId)).size,
+        }
+      }),
     )
-    return list.map((session, index) => ({ session, setCount: counts[index] }))
+    return list.map((session, index) => ({ session, ...resumos[index] }))
   }, [profileId])
 
   const detail = useLiveQuery(async () => {
@@ -77,7 +84,7 @@ export function HistoryScreen() {
         />
       ) : (
         <ul className="space-y-3">
-          {visiveis.map(({ session, setCount }) => {
+          {visiveis.map(({ session, setCount, exerciseCount }) => {
             const isOpen = expanded === session.id
             const duration = session.finishedAt ? session.finishedAt - session.startedAt : null
             return (
@@ -95,7 +102,7 @@ export function HistoryScreen() {
                           {session.weekNumber ? ` · semana ${session.weekNumber}` : ''}
                         </p>
                         <p className="mt-0.5 text-sm text-muted">
-                          {setCount} série(s)
+                          {exerciseCount} exercício(s) · {setCount} série(s)
                           {duration !== null ? ` · ${formatDuration(duration)}` : ' · em andamento'}
                         </p>
                       </div>
