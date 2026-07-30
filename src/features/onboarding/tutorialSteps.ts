@@ -18,9 +18,15 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     body: 'Planos e histórico de cargas ficam separados por perfil, mesmo usando o mesmo celular. Toque no avatar, no canto superior direito, para trocar de pessoa a qualquer momento.',
   },
   {
+    icon: '📄',
+    title: 'Importe o PDF do treinador',
+    body: 'Em Planos, toque em "Importar PDF do treinador" e escolha o arquivo que você recebeu. O app lê o PDF aqui no celular, sem enviar nada para lugar nenhum, e mostra o que entendeu para você conferir antes de salvar.',
+    tip: 'Na conferência dá para corrigir nome, técnica, séries e descanso, e mover exercícios de um treino para outro.',
+  },
+  {
     icon: '📋',
-    title: 'Monte ou importe seu plano',
-    body: 'Em Planos, crie um plano fixo (Treino A, B, C… que se repetem) ou periodizado (Semana 01 a 06, com um treino por dia). Se você já tem o plano num arquivo JSON, use Mais → Importar.',
+    title: 'Ou monte o plano à mão',
+    body: 'Também é possível criar do zero: um plano fixo (Treino A, B, C… que se repetem) ou periodizado (Semana 01 a 06, com um treino por dia).',
     tip: 'No plano periodizado, monte a Semana 01 e use "Copiar semana" — depois é só ajustar o que mudou.',
   },
   {
@@ -43,6 +49,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     icon: '💾',
     title: 'Faça backup de vez em quando',
-    body: 'Os dados ficam apenas neste celular, sem servidor. Em Mais → Backup você exporta um arquivo JSON — é o que permite trocar de aparelho ou recuperar tudo se limpar os dados do navegador.',
+    body: 'Os dados ficam apenas neste celular, sem servidor. Em Mais → Backup você exporta um arquivo de backup — é o que permite trocar de aparelho ou recuperar tudo se limpar os dados do navegador.',
   },
 ]

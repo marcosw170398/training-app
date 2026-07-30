@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useActiveProfile } from '@/state/activeProfile'
+import { getProfileState, setActivePlan, setCurrentWeek } from '@/db/repositories/profiles.repo'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -329,6 +330,13 @@ export function ImportScreen() {
                 setSalvando(true)
                 try {
                   const planId = await saveParsedPlan(profile.id, plan)
+                  // Quem importa um plano quer usá-lo. Sem isto, a home pedia
+                  // "escolha um plano ativo" logo depois da importação.
+                  const state = await getProfileState(profile.id)
+                  if (!state.activePlanId) {
+                    await setActivePlan(profile.id, planId)
+                    await setCurrentWeek(profile.id, plan.type === 'periodized' ? 1 : 0)
+                  }
                   navigate(`/planos/${planId}`, { replace: true })
                 } catch (e) {
                   setErro(e instanceof Error ? e.message : 'Não consegui salvar o plano.')
