@@ -5,6 +5,7 @@ import type {
   ProfileState,
   SeriesTarget,
   Session,
+  SessionPhoto,
   SetLog,
   TrainingPlan,
   Workout,
@@ -24,6 +25,7 @@ class TreinoDB extends Dexie {
   seriesTargets!: EntityTable<SeriesTarget, 'id'>
   sessions!: EntityTable<Session, 'id'>
   setLogs!: EntityTable<SetLog, 'id'>
+  sessionPhotos!: EntityTable<SessionPhoto, 'id'>
 
   constructor() {
     super('treino-app')
@@ -56,6 +58,19 @@ class TreinoDB extends Dexie {
         '[profileId+exerciseKey+section+performedAt], ' +
         '[sessionId+exerciseId]',
     })
+
+    // v2: calendário de treinos e foto do dia.
+    //
+    // Só o esquema de índices sobe de versão. O Dexie preserva os dados das
+    // stores existentes; `sessions` apenas ganha um índice novo.
+    this.version(2).stores({
+      // [profileId+dateKey] é o que o calendário consulta para pintar o mês.
+      sessions:
+        'id, profileId, workoutId, [profileId+startedAt], [profileId+finishedAt], ' +
+        '[profileId+workoutId+startedAt], [profileId+dateKey]',
+
+      sessionPhotos: 'id, profileId, sessionId, [profileId+dateKey]',
+    })
   }
 }
 
@@ -69,4 +84,5 @@ export const PROFILE_SCOPED_TABLES = [
   db.seriesTargets,
   db.sessions,
   db.setLogs,
+  db.sessionPhotos,
 ] as const

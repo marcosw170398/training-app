@@ -26,6 +26,18 @@ export function listSessions(profileId: Id, limit = 50): Promise<Session[]> {
     .toArray()
 }
 
+/** Sessões de um intervalo de dias — alimenta o calendário. */
+export function listSessionsBetween(
+  profileId: Id,
+  fromDateKey: string,
+  toDateKey: string,
+): Promise<Session[]> {
+  return db.sessions
+    .where('[profileId+dateKey]')
+    .between([profileId, fromDateKey], [profileId, toDateKey], true, true)
+    .toArray()
+}
+
 /** Última sessão de cada treino — alimenta o "última vez: 10/07/2026" da home. */
 export async function lastSessionByWorkout(
   profileId: Id,

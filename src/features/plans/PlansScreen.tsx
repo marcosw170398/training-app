@@ -6,6 +6,7 @@ import type { TrainingPlan } from '@/db/schema'
 import { createPlan, deletePlanCascade, listPlans, updatePlan } from '@/db/repositories/plans.repo'
 import { getProfileState, setActivePlan, setCurrentWeek } from '@/db/repositories/profiles.repo'
 import { useActiveProfile } from '@/state/activeProfile'
+import { downloadPlanExport } from '@/features/backup/exportBackup'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -110,6 +111,11 @@ export function PlansScreen() {
                       }}
                     >
                       Renomear
+                    </Button>
+                    {/* Exporta só a prescrição, sem perfil nem histórico — é o
+                        arquivo que a outra pessoa importa em Mais → Importar. */}
+                    <Button size="sm" onClick={() => downloadPlanExport(plan.id, plan.name)}>
+                      Compartilhar
                     </Button>
                     <Button size="sm" variant="danger" onClick={() => setToDelete(plan)}>
                       Excluir

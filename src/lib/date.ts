@@ -37,6 +37,28 @@ export function relativeDays(ts: number, now: number = Date.now()): string {
   return `há ${d} dias`
 }
 
+/** Primeiro e último dia do mês, no formato de `dateKey`. */
+export function monthBounds(year: number, month: number): { from: string; to: string } {
+  const ultimoDia = new Date(year, month + 1, 0).getDate()
+  const mm = String(month + 1).padStart(2, '0')
+  return { from: `${year}-${mm}-01`, to: `${year}-${mm}-${String(ultimoDia).padStart(2, '0')}` }
+}
+
+export function monthLabel(year: number, month: number): string {
+  return new Date(year, month, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+}
+
+/** Quantos dias tem o mês. */
+export function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate()
+}
+
+/** Dia da semana do 1º do mês, na convenção do app (1 = segunda ... 7 = domingo). */
+export function firstWeekdayOfMonth(year: number, month: number): number {
+  const js = new Date(year, month, 1).getDay()
+  return js === 0 ? 7 : js
+}
+
 /** Duração em segundos -> "1:05" ou "12:05". */
 export function formatClock(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds))

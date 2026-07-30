@@ -1,19 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { SetLog } from '@/db/schema'
 import { NumberStepper } from '@/components/ui/NumberStepper'
 import { formatDate } from '@/lib/date'
+import type { SetDraft } from './setDraft'
 
-export interface SetValues {
-  weight: number | null
-  reps: number | null
-  durationSeconds: number | null
-}
-
-const toNumber = (value: string): number | null => {
-  const parsed = Number(value.replace(',', '.'))
-  return value.trim() === '' || Number.isNaN(parsed) ? null : parsed
-}
-
+/**
+ * Linha de série CONTROLADA: o rascunho vive na tela de execução, não aqui.
+ *
+ * É o que permite o botão "concluir todas" do exercício usar exatamente os
+ * valores que o usuário digitou em cada série, em vez de recalcular padrões e
+ * descartar as edições dele.
+ */
 export function SetRow({
   seriesNumber,
   targetText,
@@ -21,6 +18,9 @@ export function SetRow({
   log,
   prefill,
   isExtra,
+  draft,
+  defaultDraft,
+  onDraftChange,
   onComplete,
   onUndo,
 }: {
@@ -29,29 +29,25 @@ export function SetRow({
   restText: string
   /** Já registrado nesta sessão. */
   log?: SetLog
-  /** Última execução deste movimento/série — a origem do pré-preenchimento. */
+  /** Última execução deste movimento/série — origem da carga sugerida. */
   prefill?: SetLog
   isExtra: boolean
-  onComplete: (values: SetValues) => void
+  draft: SetDraft | undefined
+  defaultDraft: SetDraft
+  onDraftChange: (next: SetDraft) => void
+  onComplete: () => void
   onUndo: () => void
 }) {
-  const [weight, setWeight] = useState('')
-  const [reps, setReps] = useState('')
-  const [duration, setDuration] = useState('')
-  const [showDuration, setShowDuration] = useState(false)
+  const atual = draft ?? defaultDraft
 
-  // A carga começa na última usada — editável, nunca imposta.
+  // Semeia o rascunho na primeira renderização da linha, para que a tela de
+  // execução conheça os valores sugeridos mesmo sem o usuário tocar no campo.
   useEffect(() => {
-    if (log) return
-    setWeight(prefill?.weight !== null && prefill?.weight !== undefined ? String(prefill.weight) : '')
-    setReps(prefill?.reps !== null && prefill?.reps !== undefined ? String(prefill.reps) : '')
-    setDuration(
-      prefill?.durationSeconds !== null && prefill?.durationSeconds !== undefined
-        ? String(prefill.durationSeconds)
-        : '',
-    )
-    setShowDuration(prefill?.durationSeconds != null)
-  }, [prefill?.id, log?.id, log, prefill])
+    if (!draft && !log) onDraftChange(defaultDraft)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, log])
+
+  const alterar = (patch: Partial<SetDraft>) => onDraftChange({ ...atual, ...patch })
 
   if (log) {
     return (
@@ -104,50 +100,41 @@ export function SetRow({
         ) : null}
       </div>
 
-      <div className="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
+      <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
         <NumberStepper
-          aria-label="Carga em kg"
-          value={weight}
-          onChange={setWeight}
+          label="Carga (kg)"
+          value={atual.weight}
+          onChange={(weight) => alterar({ weight })}
           step={2.5}
-          suffix="kg"
           placeholder="—"
         />
         <NumberStepper
-          aria-label="Repetições"
-          value={reps}
-          onChange={setReps}
+          label="Repetições"
+          value={atual.reps}
+          onChange={(reps) => alterar({ reps })}
           step={1}
-          suffix="reps"
           placeholder="—"
         />
         <button
           aria-label={`Concluir série ${seriesNumber}`}
-          onClick={() =>
-            onComplete({
-              weight: toNumber(weight),
-              reps: toNumber(reps),
-              durationSeconds: showDuration ? toNumber(duration) : null,
-            })
-          }
+          onClick={onComplete}
           className="flex min-h-12 w-14 items-center justify-center rounded-xl bg-accent text-xl font-bold text-accent-ink active:bg-accent/80"
         >
           ✓
         </button>
       </div>
 
-      {showDuration ? (
-        <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+      {atual.showDuration ? (
+        <div className="mt-2 grid grid-cols-[1fr_auto] items-end gap-2">
           <NumberStepper
-            aria-label="Duração em segundos"
-            value={duration}
-            onChange={setDuration}
+            label="Tempo (segundos)"
+            value={atual.duration}
+            onChange={(duration) => alterar({ duration })}
             step={5}
-            suffix="s"
-            placeholder="tempo"
+            placeholder="—"
           />
           <button
-            onClick={() => setShowDuration(false)}
+            onClick={() => alterar({ showDuration: false })}
             className="min-h-12 rounded-xl border border-border px-3 text-sm text-muted"
           >
             remover
@@ -155,7 +142,7 @@ export function SetRow({
         </div>
       ) : (
         <button
-          onClick={() => setShowDuration(true)}
+          onClick={() => alterar({ showDuration: true })}
           className="mt-2 text-xs text-muted underline underline-offset-2"
         >
           registrar tempo (isometria, cardio)

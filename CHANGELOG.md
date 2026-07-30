@@ -1,5 +1,37 @@
 # Notas de versão
 
+## v0.2.0 — 30/07/2026
+
+### Calendário e foto do treino
+
+- **Calendário mensal** no Histórico, com os dias treinados destacados e a
+  contagem de dias do mês. Tocar num dia filtra o histórico para ele.
+- **Foto do treino**: ao encerrar, o app oferece registrar uma foto (a câmera
+  abre direto no celular). Sem foto, o dia continua marcado como treinado.
+  A imagem é reduzida para 1280 px antes de gravar — foto de celular tem 3–5 MB
+  e aqui não há servidor para onde mandar; na prática cai para ~15 KB.
+- Fotos aparecem como miniatura no dia do calendário e em tamanho cheio ao
+  abrir o treino no histórico.
+
+### Execução do treino
+
+- **Repetições pré-preenchidas** com o topo da faixa prescrita: "8-12" sugere
+  12. Quando o alvo não descreve repetições ("até a falha", "2 antes de
+  falhar", "5 minutos"), o campo fica vazio em vez de receber um chute.
+- **Concluir todas as séries de uma vez**, por exercício, usando os valores que
+  já estavam em cada linha — as edições feitas campo a campo são preservadas.
+  Não dispara cronômetro: registrar em lote é lançamento retroativo.
+- **Cards recolhíveis**, com o nome do exercício em destaque e o progresso
+  ("2/3 séries") visível mesmo fechado. O card recolhe sozinho ao completar.
+- **Rótulos acima dos campos** ("Carga (kg)", "Repetições"): dentro do input a
+  unidade ficava atrás do número assim que era preenchido.
+
+### Compartilhar plano
+
+- Botão **Compartilhar** em cada plano, que exporta só a prescrição — sem
+  perfil e sem histórico de cargas. A outra pessoa importa em Mais → Importar
+  e recebe o plano no perfil dela, com ids novos.
+
 ## v0.1.0 — 29/07/2026
 
 Primeira versão publicada. PWA de treino multi-perfil, offline-first, sem

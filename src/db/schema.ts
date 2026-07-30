@@ -175,6 +175,26 @@ export interface Session {
   notes: string | null
 }
 
+/**
+ * Foto tirada ao fim do treino.
+ *
+ * O blob mora no IndexedDB junto com o resto — sem servidor, a foto some se o
+ * usuário limpar os dados do navegador, igual ao histórico. Por isso a imagem é
+ * reduzida antes de gravar: foto de celular tem 3–5 MB e algumas dezenas delas
+ * estourariam a cota do navegador.
+ */
+export interface SessionPhoto {
+  id: Id
+  profileId: Id
+  sessionId: Id
+  /** "YYYY-MM-DD" local — é por aqui que o calendário busca. */
+  dateKey: string
+  blob: Blob
+  width: number
+  height: number
+  createdAt: number
+}
+
 /** Registro real de uma série executada. Imutável por construção. */
 export interface SetLog {
   id: Id
