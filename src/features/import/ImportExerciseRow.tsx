@@ -125,9 +125,13 @@ export function ImportExerciseRow({
         <span className="mb-1 block text-xs text-muted">Técnica / observação</span>
         <input
           value={exercise.technique ?? ''}
-          onChange={(event) =>
-            onChange({ ...exercise, technique: event.target.value.trim() || null })
-          }
+          onChange={(event) => {
+            // NÃO usar trim() aqui: a cada tecla ele apagaria o espaço que o
+            // usuário acabou de digitar, e a próxima letra colaria na palavra
+            // anterior. A limpeza acontece na gravação (saveParsedPlan).
+            const valor = event.target.value
+            onChange({ ...exercise, technique: valor.trim() === '' ? null : valor })
+          }}
           placeholder="Ex: progressão de carga e drop"
           className={`${CAMPO} w-full`}
         />
@@ -172,13 +176,16 @@ export function ImportExerciseRow({
       </div>
 
       <div className="mt-2 flex items-center gap-2">
-        <span className="shrink-0 text-xs text-muted">Descanso</span>
+        {/* "min" lia como minutos e o "s" final como segundos, dando "de min a
+            s". Os alvos são sempre em segundos, então a unidade vem escrita e
+            os campos usam "de"/"até". */}
+        <span className="shrink-0 text-xs text-muted">Descanso de</span>
         <input
           value={exercise.series[0]?.restSecondsMin ?? ''}
           onChange={(event) => aplicarDescanso({ restSecondsMin: paraNumero(event.target.value) })}
           inputMode="numeric"
-          placeholder="min"
-          className={`${CAMPO} w-16 text-center`}
+          placeholder="—"
+          className={`${CAMPO} w-14 text-center`}
           aria-label="Descanso mínimo em segundos"
         />
         <span className="text-xs text-muted">a</span>
@@ -186,11 +193,11 @@ export function ImportExerciseRow({
           value={exercise.series[0]?.restSecondsMax ?? ''}
           onChange={(event) => aplicarDescanso({ restSecondsMax: paraNumero(event.target.value) })}
           inputMode="numeric"
-          placeholder="máx"
-          className={`${CAMPO} w-16 text-center`}
+          placeholder="—"
+          className={`${CAMPO} w-14 text-center`}
           aria-label="Descanso máximo em segundos"
         />
-        <span className="shrink-0 text-xs text-muted">s</span>
+        <span className="shrink-0 text-xs text-muted">segundos</span>
         {exercise.series[0]?.restNote ? (
           <span className="truncate text-xs text-muted">“{exercise.series[0].restNote}”</span>
         ) : null}

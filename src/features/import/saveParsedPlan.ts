@@ -63,7 +63,9 @@ export async function saveParsedPlan(profileId: Id, parsed: ParsedPlan): Promise
         name: parsedExercise.name.trim(),
         exerciseKey: toExerciseKey(parsedExercise.name),
         section: parsedExercise.section,
-        technique: parsedExercise.technique,
+        // Trim só aqui, na gravação — durante a digitação ele impediria o
+        // usuário de teclar espaço.
+        technique: parsedExercise.technique?.trim() || null,
         supersetGroup: null,
         order: index,
         notes: null,

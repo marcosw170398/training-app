@@ -58,14 +58,16 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
       </div>
 
       <div className="mt-2 flex items-center gap-2 pl-10">
-        <span className="shrink-0 text-xs text-muted">Descanso</span>
+        {/* Unidade escrita: "min … s" lia como "de minutos a segundos". */}
+        <span className="shrink-0 text-xs text-muted">Descanso de</span>
         <input
           value={min}
           onChange={(event) => setMin(event.target.value)}
           onBlur={commit}
           inputMode="numeric"
-          placeholder="min"
-          className={`${cell} w-16 text-center`}
+          placeholder="—"
+          aria-label="Descanso mínimo em segundos"
+          className={`${cell} w-14 text-center`}
         />
         <span className="text-xs text-muted">a</span>
         <input
@@ -73,10 +75,11 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           onChange={(event) => setMax(event.target.value)}
           onBlur={commit}
           inputMode="numeric"
-          placeholder="máx"
-          className={`${cell} w-16 text-center`}
+          placeholder="—"
+          aria-label="Descanso máximo em segundos"
+          className={`${cell} w-14 text-center`}
         />
-        <span className="shrink-0 text-xs text-muted">s</span>
+        <span className="shrink-0 text-xs text-muted">segundos</span>
       </div>
 
       <div className="mt-2 pl-10">
