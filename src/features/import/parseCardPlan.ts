@@ -164,15 +164,22 @@ export function parseCardPlanFromPages(
             intervalo = limpo
             continue
           }
-          if (RE_TEM_SERIE.test(limpo)) continue
+          // Qualquer parêntese marca pedaço de série — inclusive o fragmento
+          // final de um token que quebrou de linha ("pause)", "drop)"). Sem
+          // isso ele vazava para a técnica do exercício.
+          if (/[()]/.test(limpo) || RE_TEM_SERIE.test(limpo)) continue
           descricao.push(limpo)
         }
 
-        for (const linha of linhasCompletas) {
-          if (linha.y <= faixa.bottom + 13 || linha.y >= limiteInferior - 5) continue
-          const limpo = limparRuido(linha.text)
-          if (limpo && RE_TEM_SERIE.test(limpo)) tokensSerie.push(...parseSeriesTokens(limpo))
-        }
+        // As séries são tokenizadas sobre as linhas JUNTAS, porque no PDF um
+        // token pode atravessar a quebra: "(1x 6 a 10 + 2 rest" numa linha e
+        // "pause)" na seguinte. Linha a linha, esse token se perdia.
+        const textoSeries = linhasCompletas
+          .filter((linha) => linha.y > faixa.bottom + 13 && linha.y < limiteInferior - 5)
+          .map((linha) => limparRuido(linha.text))
+          .filter((limpo) => limpo && /[()]/.test(limpo))
+          .join(' ')
+        if (textoSeries) tokensSerie.push(...parseSeriesTokens(textoSeries))
 
         // A faixa dourada É a prova de que existe um exercício aqui. Se o OCR
         // perdeu a linha de séries, o exercício entra vazio e aparece marcado

@@ -5,6 +5,7 @@ import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Field, TextInput } from '@/components/ui/Field'
+import { Sheet } from '@/components/ui/Sheet'
 import { Splash } from '@/app/Splash'
 import { weekdayLabel } from '@/lib/weekday'
 import { readPlanFromPdf, type ImportProgress } from './importPdf'
@@ -20,6 +21,12 @@ const ROTULO_ETAPA: Record<ImportProgress['stage'], string> = {
   interpretando: 'Interpretando o plano',
 }
 
+/** Origem de um movimento pendente: um exercício, ou o treino inteiro. */
+interface Movimento {
+  workoutIndex: number
+  exerciseIndex: number | 'todos'
+}
+
 export function ImportScreen() {
   const navigate = useNavigate()
   const profile = useActiveProfile()
@@ -30,6 +37,7 @@ export function ImportScreen() {
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [abertos, setAbertos] = useState<Set<number>>(new Set([0]))
+  const [movimento, setMovimento] = useState<Movimento | null>(null)
 
   if (!profile) return <Splash />
 
@@ -47,6 +55,12 @@ export function ImportScreen() {
     }
   }
 
+  /** Treino sem exercício não serve para nada — sai da lista sozinho. */
+  const podarVazios = (atual: ParsedPlan): ParsedPlan => ({
+    ...atual,
+    workouts: atual.workouts.filter((workout) => workout.exercises.length > 0),
+  })
+
   const atualizarExercicio = (
     workoutIndex: number,
     exerciseIndex: number,
@@ -62,14 +76,70 @@ export function ImportScreen() {
             : workout.exercises.map((exercise, ei) => (ei === exerciseIndex ? next : exercise))
         return { ...workout, exercises }
       })
-      return { ...atual, workouts }
+      return next === null ? podarVazios({ ...atual, workouts }) : { ...atual, workouts }
     })
+  }
+
+  const renomearTreino = (workoutIndex: number, name: string) => {
+    setPlan((atual) =>
+      atual
+        ? {
+            ...atual,
+            workouts: atual.workouts.map((workout, wi) =>
+              wi === workoutIndex ? { ...workout, name } : workout,
+            ),
+          }
+        : atual,
+    )
   }
 
   const removerTreino = (workoutIndex: number) => {
     setPlan((atual) =>
       atual ? { ...atual, workouts: atual.workouts.filter((_, i) => i !== workoutIndex) } : atual,
     )
+  }
+
+  /**
+   * Move exercício(s) entre treinos.
+   *
+   * O parser divide um treino por página quando o PDF não traz "Treino A/B/C"
+   * legível, então remontar a divisão correta aqui é parte normal do fluxo.
+   */
+  const mover = (origem: Movimento, destinoIndex: number) => {
+    // Calculado fora de setPlan: o updater do React pode rodar duas vezes em
+    // StrictMode, e aqui há efeito colateral (reabrir o treino de destino).
+    if (!plan) return
+    const treinoOrigem = plan.workouts[origem.workoutIndex]
+    if (!treinoOrigem) return
+
+    const movidos =
+      origem.exerciseIndex === 'todos'
+        ? treinoOrigem.exercises
+        : [treinoOrigem.exercises[origem.exerciseIndex]].filter(Boolean)
+    if (!movidos.length) return
+
+    const workouts = plan.workouts.map((workout, wi) => {
+      if (wi === origem.workoutIndex) {
+        return {
+          ...workout,
+          exercises:
+            origem.exerciseIndex === 'todos'
+              ? []
+              : workout.exercises.filter((_, ei) => ei !== origem.exerciseIndex),
+        }
+      }
+      if (wi === destinoIndex) {
+        return { ...workout, exercises: [...workout.exercises, ...movidos] }
+      }
+      return workout
+    })
+
+    const podado = podarVazios({ ...plan, workouts })
+    // Mantém aberto o treino que recebeu, já com os índices pós-poda.
+    const destino = podado.workouts.indexOf(workouts[destinoIndex])
+    setPlan(podado)
+    setAbertos(new Set([destino >= 0 ? destino : 0]))
+    setMovimento(null)
   }
 
   const alternar = (index: number) => {
@@ -81,15 +151,17 @@ export function ImportScreen() {
     })
   }
 
+  const origemMovimento = movimento ? plan?.workouts[movimento.workoutIndex] : undefined
+
   return (
     <Screen title="Importar plano em PDF" back="/planos">
       {!plan ? (
         <>
           <Card className="mb-4">
             <p className="text-sm text-muted">
-              Escolha o PDF que você recebeu do treinador. O app lê o arquivo aqui no celular,
-              sem enviar nada para lugar nenhum, e mostra o que entendeu para você conferir antes
-              de salvar.
+              Escolha o PDF que você recebeu do treinador. O app lê o arquivo aqui no celular, sem
+              enviar nada para lugar nenhum, e mostra o que entendeu para você conferir antes de
+              salvar.
             </p>
           </Card>
 
@@ -148,7 +220,10 @@ export function ImportScreen() {
               {` · ${plan.workouts.length} treino(s) · ${countExercises(plan)} exercício(s) · ${countSeries(plan)} série(s)`}
             </p>
             <p className="mt-1 text-xs text-muted">
-              Lido {plan.source === 'ocr' ? 'com OCR (PDF digitalizado)' : 'da camada de texto do PDF'}
+              Lido{' '}
+              {plan.source === 'ocr'
+                ? 'com OCR (PDF digitalizado)'
+                : 'da camada de texto do PDF'}
             </p>
           </Card>
 
@@ -167,28 +242,45 @@ export function ImportScreen() {
             {plan.workouts.map((workout, workoutIndex) => {
               const aberto = abertos.has(workoutIndex)
               return (
-                <li key={`${workout.weekNumber}-${workout.name}-${workoutIndex}`}>
+                <li key={workoutIndex}>
                   <Card>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="min-w-0 flex-1 text-left"
-                        onClick={() => alternar(workoutIndex)}
-                      >
-                        <p className="truncate font-semibold">
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <input
+                          value={workout.name}
+                          onChange={(event) => renomearTreino(workoutIndex, event.target.value)}
+                          aria-label={`Nome do treino ${workoutIndex + 1}`}
+                          className="w-full rounded-lg border border-border bg-surface-2 px-2 py-2 font-semibold text-text outline-none focus:border-accent"
+                        />
+                        <p className="mt-1 text-sm text-muted">
                           {workout.weekNumber > 0
                             ? `Semana ${String(workout.weekNumber).padStart(2, '0')} · `
                             : ''}
-                          {workout.name}
-                        </p>
-                        <p className="text-sm text-muted">
                           {workout.weekday ? `${weekdayLabel(workout.weekday)} · ` : ''}
                           {workout.exercises.length} exercício(s)
                         </p>
+                      </div>
+                      <button
+                        onClick={() => alternar(workoutIndex)}
+                        aria-label={aberto ? 'Recolher' : 'Expandir'}
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted active:bg-surface-2"
+                      >
+                        {aberto ? '−' : '+'}
                       </button>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {plan.workouts.length > 1 ? (
+                        <Button
+                          size="sm"
+                          onClick={() => setMovimento({ workoutIndex, exerciseIndex: 'todos' })}
+                        >
+                          Mover todos para…
+                        </Button>
+                      ) : null}
                       <Button size="sm" variant="danger" onClick={() => removerTreino(workoutIndex)}>
-                        Remover
+                        Remover treino
                       </Button>
-                      <span className="w-4 text-center text-muted">{aberto ? '−' : '+'}</span>
                     </div>
 
                     {aberto ? (
@@ -201,6 +293,11 @@ export function ImportScreen() {
                               atualizarExercicio(workoutIndex, exerciseIndex, next)
                             }
                             onRemove={() => atualizarExercicio(workoutIndex, exerciseIndex, null)}
+                            onMove={
+                              plan.workouts.length > 1
+                                ? () => setMovimento({ workoutIndex, exerciseIndex })
+                                : undefined
+                            }
                           />
                         ))}
                       </div>
@@ -248,6 +345,44 @@ export function ImportScreen() {
           </div>
         </>
       )}
+
+      <Sheet
+        open={movimento !== null}
+        title={
+          movimento?.exerciseIndex === 'todos'
+            ? `Mover ${origemMovimento?.exercises.length ?? 0} exercício(s) para`
+            : 'Mover exercício para'
+        }
+        onClose={() => setMovimento(null)}
+      >
+        {movimento && plan ? (
+          <>
+            <p className="mb-3 text-sm text-muted">
+              De <span className="text-text">{origemMovimento?.name}</span>
+              {movimento.exerciseIndex !== 'todos' ? (
+                <>
+                  {' · '}
+                  <span className="text-text">
+                    {origemMovimento?.exercises[movimento.exerciseIndex]?.name}
+                  </span>
+                </>
+              ) : null}
+            </p>
+            <div className="space-y-2 pb-2">
+              {plan.workouts.map((workout, index) =>
+                index === movimento.workoutIndex ? null : (
+                  <Button key={index} full onClick={() => mover(movimento, index)}>
+                    {workout.name} ({workout.exercises.length})
+                  </Button>
+                ),
+              )}
+            </div>
+            <p className="pb-2 text-xs text-muted">
+              Treino que ficar sem exercícios é removido automaticamente.
+            </p>
+          </>
+        ) : null}
+      </Sheet>
     </Screen>
   )
 }
