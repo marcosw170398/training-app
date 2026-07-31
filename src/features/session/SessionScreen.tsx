@@ -70,12 +70,19 @@ export function SessionScreen() {
   /** Rascunho de cada série pendente, por `exerciseId|seriesNumber`. */
   const [drafts, setDrafts] = useState<Record<string, SetDraft>>({})
   /**
-   * Chaves de bloco cujo estado ABERTO/FECHADO foi trocado manualmente — o
-   * padrão em si (só o primeiro aberto) não fica salvo aqui, só o desvio dele.
+   * Overrides do padrão "só o primeiro incompleto vem aberto" — dois
+   * conjuntos, não um flip: o foco padrão MUDA de bloco a cada render (é o
+   * próximo incompleto), então um override em forma de "inverte o padrão
+   * atual" reabriria um bloco já concluído assim que o foco passasse por ele.
+   * `forcedClosed` é permanente até o usuário reabrir manualmente; não
+   * depende de qual bloco é o foco no momento.
    */
-  const [toggled, setToggled] = useState<Set<string>>(new Set())
+  const [forcedOpen, setForcedOpen] = useState<Set<string>>(new Set())
+  const [forcedClosed, setForcedClosed] = useState<Set<string>>(new Set())
   /** Blocos já recolhidos automaticamente — evita recolher de novo se reabrir. */
   const autoCollapsed = useRef<Set<string>>(new Set())
+  /** Trava o encerramento automático em um disparo só por sessão. */
+  const autoFinalizado = useRef(false)
   const [photoOpen, setPhotoOpen] = useState(false)
   const [warmupOpen, setWarmupOpen] = useState(true)
   const [finishOpen, setFinishOpen] = useState(false)
@@ -168,15 +175,6 @@ export function SessionScreen() {
     }
   }
 
-  // Só o primeiro bloco vem aberto por padrão — o resto fica fechado até o
-  // usuário tocar. Ordem estável (vem de `listExercises`), então a mesma
-  // chave permanece "o primeiro" durante toda a sessão.
-  const primeiroBlocoKey = blocks[0]?.key
-  const isBlockOpen = (block: Block): boolean => {
-    const defaultAberto = block.key === primeiroBlocoKey
-    return toggled.has(block.key) ? !defaultAberto : defaultAberto
-  }
-
   const rowsFor = (exercise: Exercise): Row[] => {
     const series = seriesByExercise.get(exercise.id) ?? []
     const loggedNumbers = logs
@@ -254,16 +252,31 @@ export function SessionScreen() {
   const draftFor = (exercise: Exercise, row: Row): SetDraft =>
     drafts[logKey(exercise.id, row.seriesNumber)] ?? defaultDraftFor(exercise, row)
 
-  const gravar = (exercise: Exercise, row: Row) =>
-    logSet({
+  /**
+   * Última carga REGISTRADA nesta sessão para o exercício — rede de segurança
+   * só usada se a série for confirmada sem nenhuma carga preenchida (série
+   * extra sem prefill, ou campo limpo pelo usuário). Nunca sobrescreve o que
+   * foi digitado.
+   */
+  const ultimaCargaConhecida = (exercise: Exercise): number | null => {
+    const doExercicio = logs.filter((log) => log.exerciseId === exercise.id && log.weight !== null)
+    if (!doExercicio.length) return null
+    return [...doExercicio].sort((a, b) => b.performedAt - a.performedAt)[0].weight
+  }
+
+  const gravar = (exercise: Exercise, row: Row, pesoFallback: number | null = null) => {
+    const valores = draftToValues(draftFor(exercise, row))
+    return logSet({
       profileId: profile.id,
       sessionId: session.id,
       exercise,
       seriesTarget: row.target,
       seriesNumber: row.seriesNumber,
       targetText: row.target?.targetText ?? '',
-      ...draftToValues(draftFor(exercise, row)),
+      ...valores,
+      weight: valores.weight ?? pesoFallback,
     })
+  }
 
   /**
    * Recalcula o recorde do movimento após gravar e celebra se o log recém-
@@ -289,29 +302,84 @@ export function SessionScreen() {
       0,
     )
 
-  /** Recolhe o bloco assim que ele fica completo — menos rolagem na academia. */
+  const statusDoBloco = (block: Block): { totalRows: number; feitas: number } => {
+    const totalRows = block.exercises.reduce(
+      (total, exercise) => total + rowsFor(exercise).length,
+      0,
+    )
+    return { totalRows, feitas: totalRows - pendentesDoBloco(block) }
+  }
+
+  /**
+   * O card aberto por padrão é o PRIMEIRO, na ordem do treino, que ainda não
+   * terminou — nunca sempre o primeiro da lista. Cobre os dois casos pedidos
+   * com a mesma regra: sessão nova (nada feito) abre no bloco 1; sessão
+   * retomada com blocos já concluídos abre logo depois do último feito;
+   * bloco parcialmente feito (2 de 4 séries) abre nele mesmo. Todo o resto
+   * vem fechado, a menos que o usuário tenha aberto manualmente.
+   */
+  const primeiroIncompletoKey = blocks.find((block) => {
+    const { totalRows, feitas } = statusDoBloco(block)
+    return totalRows === 0 || feitas < totalRows
+  })?.key
+
+  const isBlockOpen = (block: Block): boolean => {
+    if (forcedOpen.has(block.key)) return true
+    if (forcedClosed.has(block.key)) return false
+    return block.key === primeiroIncompletoKey
+  }
+
+  /** Recolhe o bloco assim que ele fica completo — menos rolagem na academia.
+   * O próximo bloco incompleto assume o holofote sozinho, porque
+   * `primeiroIncompletoKey` é recalculado a cada render a partir do banco. */
   const recolherSeCompletou = (block: Block, pendentesAntes: number, gravadas: number) => {
     if (pendentesAntes - gravadas > 0) return
     if (autoCollapsed.current.has(block.key)) return
     autoCollapsed.current.add(block.key)
-    // Força fechado independente do padrão: se era o primeiro bloco (aberto
-    // por padrão), marca como trocado; se já era fechado por padrão, garante
-    // que nenhuma abertura manual anterior continue valendo.
-    const defaultAberto = block.key === primeiroBlocoKey
-    setToggled((atual) => {
+    setForcedOpen((atual) => {
+      if (!atual.has(block.key)) return atual
       const proximo = new Set(atual)
-      if (defaultAberto) proximo.add(block.key)
-      else proximo.delete(block.key)
+      proximo.delete(block.key)
       return proximo
     })
+    setForcedClosed((atual) => new Set(atual).add(block.key))
+  }
+
+  /**
+   * Verifica, sem esperar a query reativa recarregar, se a gravação que
+   * acabou de acontecer fechou o ÚLTIMO exercício pendente do treino
+   * inteiro — é o gatilho do encerramento automático.
+   */
+  const todosCompletosApos = (exercicioAlterado: Exercise, quantidadeGravada: number): boolean => {
+    if (statusExercicios.length === 0) return false
+    return statusExercicios.every(({ exercise, feitas, total }) => {
+      const feitasFinal = exercise.id === exercicioAlterado.id ? feitas + quantidadeGravada : feitas
+      return total === 0 || feitasFinal >= total
+    })
+  }
+
+  /** Mesmo desfecho do botão "Encerrar treino": para o cronômetro, marca a
+   * sessão como terminada e oferece a foto do dia. */
+  const encerrarTreino = async () => {
+    timer.stop()
+    await finishSession(session.id)
+    setPhotoOpen(true)
+  }
+
+  const finalizarSeCompleto = (exercicioAlterado: Exercise, quantidadeGravada: number) => {
+    if (!isOpen || autoFinalizado.current) return
+    if (!todosCompletosApos(exercicioAlterado, quantidadeGravada)) return
+    autoFinalizado.current = true
+    void encerrarTreino()
   }
 
   const complete = async (block: Block, exercise: Exercise, row: Row, withRest: boolean) => {
     const pendentesAntes = pendentesDoBloco(block)
-    const log = await gravar(exercise, row)
+    const log = await gravar(exercise, row, ultimaCargaConhecida(exercise))
     if (withRest) startRest(exercise, row)
     recolherSeCompletou(block, pendentesAntes, 1)
     void celebrarSeRecorde(exercise, log)
+    finalizarSeCompleto(exercise, 1)
   }
 
   /**
@@ -327,7 +395,15 @@ export function SessionScreen() {
       (row) => !logsByKey.has(logKey(exercise.id, row.seriesNumber)),
     )
     const criados: SetLog[] = []
-    for (const row of pendentes) criados.push(await gravar(exercise, row))
+    // A carga corrente avança a cada série gravada, então a segunda série sem
+    // carga preenchida herda a que a primeira acabou de usar, não a de antes
+    // do lote inteiro começar.
+    let pesoCorrente = ultimaCargaConhecida(exercise)
+    for (const row of pendentes) {
+      const log = await gravar(exercise, row, pesoCorrente)
+      criados.push(log)
+      if (log.weight !== null) pesoCorrente = log.weight
+    }
     recolherSeCompletou(block, pendentesAntes, pendentes.length)
     // Checa só a maior carga do lote — é a que teria chance de bater recorde;
     // conferir todas gastaria consultas sem motivo.
@@ -337,6 +413,7 @@ export function SessionScreen() {
       return maior
     }, null)
     if (maiorLog) void celebrarSeRecorde(exercise, maiorLog)
+    finalizarSeCompleto(exercise, criados.length)
   }
 
   const renderExerciseRows = (block: Block, exercise: Exercise, withRest = true) => (
@@ -484,11 +561,7 @@ export function SessionScreen() {
                 ? Math.max(...block.exercises.map((exercise) => rowsFor(exercise).length))
                 : 0
 
-              const totalRows = block.exercises.reduce(
-                (total, exercise) => total + rowsFor(exercise).length,
-                0,
-              )
-              const feitas = totalRows - pendentesDoBloco(block)
+              const { totalRows, feitas } = statusDoBloco(block)
               const aberto = isBlockOpen(block)
 
               return (
@@ -497,14 +570,28 @@ export function SessionScreen() {
                     {/* Cabeçalho sempre visível: nome grande e progresso, para
                         achar o exercício de relance com o card fechado. */}
                     <button
-                      onClick={() =>
-                        setToggled((atual) => {
-                          const proximo = new Set(atual)
-                          if (proximo.has(block.key)) proximo.delete(block.key)
-                          else proximo.add(block.key)
-                          return proximo
-                        })
-                      }
+                      onClick={() => {
+                        // Toque manual sempre vence o padrão automático, nos
+                        // dois sentidos — fechar o holofote atual, ou abrir
+                        // um bloco que não era o foco.
+                        if (aberto) {
+                          setForcedOpen((atual) => {
+                            if (!atual.has(block.key)) return atual
+                            const proximo = new Set(atual)
+                            proximo.delete(block.key)
+                            return proximo
+                          })
+                          setForcedClosed((atual) => new Set(atual).add(block.key))
+                        } else {
+                          setForcedClosed((atual) => {
+                            if (!atual.has(block.key)) return atual
+                            const proximo = new Set(atual)
+                            proximo.delete(block.key)
+                            return proximo
+                          })
+                          setForcedOpen((atual) => new Set(atual).add(block.key))
+                        }
+                      }}
                       className="flex w-full items-start gap-2 text-left"
                       aria-expanded={aberto}
                     >
@@ -756,12 +843,9 @@ export function SessionScreen() {
           </>
         }
         onClose={() => setFinishOpen(false)}
-        onConfirm={async () => {
-          timer.stop()
-          await finishSession(session.id)
-          // A foto vem depois de encerrar: o treino já está salvo, tirar ou não
-          // a foto não muda isso.
-          setPhotoOpen(true)
+        onConfirm={() => {
+          autoFinalizado.current = true
+          void encerrarTreino()
         }}
       />
 

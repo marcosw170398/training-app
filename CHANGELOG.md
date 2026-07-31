@@ -1,5 +1,26 @@
 # Notas de versão
 
+## v0.5.0 — 31/07/2026
+
+### Execução mais fluida
+
+- **O próximo exercício abre sozinho** assim que o atual é concluído — nunca
+  mais precisa tocar para avançar.
+- **Retomar um treino em andamento abre no lugar certo**: o exercício logo
+  após o último concluído, ou o que ficou pela metade (ex.: 2 de 4 séries) —
+  não sempre o primeiro da lista.
+- **Carga vazia herda a última usada na sessão**: se uma série for concluída
+  sem carga preenchida, usa a da série anterior do mesmo exercício em vez de
+  gravar em branco. Só entra quando o campo está vazio — nunca sobrescreve o
+  que foi digitado.
+- **Treino encerra sozinho** ao concluir o último exercício pendente — vai
+  direto para a tela de foto, sem precisar tocar em "Encerrar".
+
+### Foto do treino, também depois de encerrado
+
+O histórico agora permite acrescentar foto a um treino já finalizado, direto
+do card expandido do dia — antes só era possível na hora de encerrar.
+
 ## v0.4.0 — 31/07/2026
 
 ### Evolução por exercício

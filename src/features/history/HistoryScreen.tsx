@@ -1,15 +1,16 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import type { Id } from '@/db/schema'
 import { listSessions, updateSessionNotes } from '@/db/repositories/sessions.repo'
 import { listLoggedExercises, listSetLogsOfSession } from '@/db/repositories/setLogs.repo'
-import { deletePhoto, listPhotosOfSession } from '@/db/repositories/photos.repo'
+import { addSessionPhoto, deletePhoto, listPhotosOfSession } from '@/db/repositories/photos.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { formatDate, formatDateTime, formatDuration, relativeDays } from '@/lib/date'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { Chevron } from '@/components/ui/Chevron'
 import { Splash } from '@/app/Splash'
 import { TrainingCalendar } from './TrainingCalendar'
@@ -24,6 +25,9 @@ export function HistoryScreen() {
   const [aba, setAba] = useState<Aba>('sessoes')
   const [expanded, setExpanded] = useState<Id | null>(null)
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null)
+  const fotoInputRef = useRef<HTMLInputElement>(null)
+  const [salvandoFoto, setSalvandoFoto] = useState(false)
+  const [erroFoto, setErroFoto] = useState<string | null>(null)
 
   const sessions = useLiveQuery(async () => {
     if (!profileId) return null
@@ -63,6 +67,22 @@ export function HistoryScreen() {
   useEffect(() => () => photoUrls.forEach(({ url }) => URL.revokeObjectURL(url)), [photoUrls])
 
   if (!profile || !sessions) return <Splash />
+
+  /** Ainda funciona para treino já encerrado — a foto não precisa ser tirada
+   * na hora, só fica associada ao dia certo pelo `dateKey` da sessão. */
+  const adicionarFoto = async (file: File) => {
+    const alvo = sessions.find(({ session }) => session.id === expanded)?.session
+    if (!alvo) return
+    setSalvandoFoto(true)
+    setErroFoto(null)
+    try {
+      await addSessionPhoto({ profileId: profile.id, sessionId: alvo.id, dateKey: alvo.dateKey, file })
+    } catch (e) {
+      setErroFoto(e instanceof Error ? e.message : 'Não consegui salvar a foto.')
+    } finally {
+      setSalvandoFoto(false)
+    }
+  }
 
   const visiveis = diaSelecionado
     ? sessions.filter(({ session }) => session.dateKey === diaSelecionado)
@@ -195,6 +215,33 @@ export function HistoryScreen() {
                               ))}
                             </div>
                           ) : null}
+
+                          <div>
+                            <input
+                              ref={fotoInputRef}
+                              type="file"
+                              accept="image/*"
+                              capture="environment"
+                              className="hidden"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0]
+                                if (file) void adicionarFoto(file)
+                                event.target.value = ''
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              disabled={salvandoFoto}
+                              onClick={() => fotoInputRef.current?.click()}
+                            >
+                              {salvandoFoto
+                                ? 'Salvando…'
+                                : photoUrls.length
+                                  ? '+ Adicionar outra foto'
+                                  : '+ Adicionar foto'}
+                            </Button>
+                            {erroFoto ? <p className="mt-1 text-sm text-danger">{erroFoto}</p> : null}
+                          </div>
 
                           <SessionNotesField
                             sessionId={session.id}
