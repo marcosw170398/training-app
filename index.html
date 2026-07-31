@@ -7,11 +7,24 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="theme-color" content="#0b0f14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141210" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf7f2" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Treino" />
     <title>Treino</title>
+    <script>
+      // Aplica a preferência salva ANTES do primeiro paint. Sem isso, a tela
+      // pisca com a cor do sistema por um instante e só então troca para a
+      // escolha manual do usuário — mesma leitura síncrona que
+      // src/state/theme.ts faz depois, em React.
+      try {
+        var pref = localStorage.getItem('treino:theme')
+        if (pref === 'light' || pref === 'dark') {
+          document.documentElement.setAttribute('data-theme', pref)
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

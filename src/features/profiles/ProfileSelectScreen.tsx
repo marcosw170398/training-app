@@ -15,7 +15,7 @@ export function ProfileSelectScreen() {
 
   return (
     <div className="safe-top safe-bottom flex min-h-dvh flex-col justify-center px-6">
-      <h1 className="mb-8 text-center text-2xl font-semibold">Quem está treinando?</h1>
+      <h1 className="mb-8 text-center font-display text-2xl font-semibold">Quem está treinando?</h1>
 
       <ul className="mx-auto w-full max-w-sm space-y-3">
         {profiles.map((profile) => (

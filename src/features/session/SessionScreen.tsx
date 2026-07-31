@@ -431,7 +431,7 @@ export function SessionScreen() {
                       <div className="min-w-0 flex-1">
                         {block.exercises.map((exercise) => (
                           <span key={exercise.id} className="flex flex-wrap items-center gap-2">
-                            <span className="text-lg font-semibold leading-snug">
+                            <span className="font-display text-lg font-semibold leading-snug">
                               {exercise.name}
                             </span>
                             <SectionBadge section={exercise.section} />
@@ -566,7 +566,7 @@ export function SessionScreen() {
                                   o nome volta aqui para não confundir as séries. */}
                               {block.exercises.length > 1 ? (
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                                  <span className="font-semibold">{exercise.name}</span>
+                                  <span className="font-display font-semibold">{exercise.name}</span>
                                   <SectionBadge section={exercise.section} />
                                 </div>
                               ) : null}

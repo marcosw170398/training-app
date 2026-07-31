@@ -34,10 +34,10 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="safe-bottom relative max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-border bg-surface px-4 pt-3"
+        className="safe-bottom relative max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-border bg-surface px-4 pt-3"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-border" />
-        <h2 className="mb-4 text-lg font-semibold text-text">{title}</h2>
+        <h2 className="mb-4 font-display text-lg font-semibold text-text">{title}</h2>
         {children}
       </div>
     </div>

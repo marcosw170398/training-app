@@ -9,7 +9,7 @@ export function Card({
   className?: string
   onClick?: () => void
 }) {
-  const base = 'rounded-2xl border border-border bg-surface p-4'
+  const base = 'rounded-xl border border-border bg-surface p-4'
   if (!onClick) return <div className={`${base} ${className}`}>{children}</div>
   return (
     <button onClick={onClick} className={`${base} w-full text-left active:bg-surface-2 ${className}`}>
@@ -28,7 +28,7 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border px-5 py-10 text-center">
+    <div className="rounded-xl border border-dashed border-border px-5 py-10 text-center">
       <p className="font-medium text-text">{title}</p>
       {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}

@@ -92,7 +92,7 @@ export function HomeScreen() {
       {openSession ? (
         <Card className="mb-4 border-accent/50 bg-accent/10">
           <p className="text-sm text-muted">Treino em andamento</p>
-          <p className="mt-0.5 font-semibold">{openSession.workoutName}</p>
+          <p className="mt-0.5 font-display font-semibold">{openSession.workoutName}</p>
           <Button
             full
             variant="primary"
@@ -133,7 +133,9 @@ export function HomeScreen() {
                   ‹
                 </Button>
                 <div className="text-center">
-                  <p className="font-semibold">
+                  {/* Números — mesma família mono do cronômetro e da carga,
+                      em vez do texto de prosa ao redor. */}
+                  <p className="font-mono font-semibold tabular-nums">
                     Semana {String(week).padStart(2, '0')}
                     <span className="text-muted"> de {String(plan.totalWeeks).padStart(2, '0')}</span>
                   </p>
@@ -195,7 +197,7 @@ export function HomeScreen() {
                     <div className="flex items-center gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <p className="truncate font-semibold">{workout.name}</p>
+                          <p className="truncate font-display font-semibold">{workout.name}</p>
                           {isSuggested ? (
                             <span className="shrink-0 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
                               {isToday ? 'hoje' : 'sugerido'}

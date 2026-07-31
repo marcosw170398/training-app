@@ -25,8 +25,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0b0f14',
-        theme_color: '#0b0f14',
+        background_color: '#141210',
+        theme_color: '#141210',
         icons: [
           { src: '/icons/pwa-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: '/icons/pwa-maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
@@ -37,7 +37,19 @@ export default defineConfig({
         // O motor de OCR (~5 MB) fica FORA do precache: quem só usa PDF com
         // camada de texto nunca baixa esse peso. Ele é buscado na primeira
         // importação de PDF digitalizado e cacheado a partir daí.
-        globIgnores: ['**/tesseract/**'],
+        //
+        // O Fontsource empacota subconjuntos Unicode que este app (só pt-BR)
+        // nunca usa — grego, cirílico, vietnamita. O `unicode-range` do
+        // @font-face já impede o navegador de baixá-los em uso normal; sem
+        // este filtro, o precache forçaria o download de qualquer forma.
+        globIgnores: [
+          '**/tesseract/**',
+          '**/*-vietnamese-*.woff2',
+          '**/*-cyrillic-*.woff2',
+          '**/*-cyrillic-ext-*.woff2',
+          '**/*-greek-*.woff2',
+          '**/*-greek-ext-*.woff2',
+        ],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

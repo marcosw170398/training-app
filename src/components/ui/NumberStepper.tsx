@@ -60,7 +60,7 @@ export function NumberStepper({
           onChange={(event) => onChange(event.target.value.replace(/[^0-9.,]/g, ''))}
           inputMode="decimal"
           placeholder={placeholder}
-          className="min-w-0 flex-1 bg-transparent py-3 text-center text-base tabular-nums text-text outline-none placeholder:text-muted/50"
+          className="min-w-0 flex-1 bg-transparent py-3 text-center font-mono text-base tabular-nums text-text outline-none placeholder:text-muted/50"
         />
         <button
           type="button"

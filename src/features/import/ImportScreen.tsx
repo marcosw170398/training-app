@@ -251,7 +251,7 @@ export function ImportScreen() {
                           value={workout.name}
                           onChange={(event) => renomearTreino(workoutIndex, event.target.value)}
                           aria-label={`Nome do treino ${workoutIndex + 1}`}
-                          className="w-full rounded-lg border border-border bg-surface-2 px-2 py-2 font-semibold text-text outline-none focus:border-accent"
+                          className="w-full rounded-lg border border-border bg-surface-2 px-2 py-2 font-display font-semibold text-text outline-none focus:border-accent"
                         />
                         <p className="mt-1 text-sm text-muted">
                           {workout.weekNumber > 0

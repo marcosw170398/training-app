@@ -12,9 +12,9 @@ const VARIANTS: Record<Variant, string> = {
 
 // Alvos de toque generosos: o app é usado de pé, com uma mão, suando.
 const SIZES: Record<Size, string> = {
-  sm: 'min-h-9 px-3 text-sm rounded-lg',
-  md: 'min-h-11 px-4 text-base rounded-xl',
-  lg: 'min-h-14 px-5 text-lg rounded-2xl',
+  sm: 'min-h-9 px-3 text-sm rounded-md',
+  md: 'min-h-11 px-4 text-base rounded-lg',
+  lg: 'min-h-14 px-5 text-lg rounded-xl',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

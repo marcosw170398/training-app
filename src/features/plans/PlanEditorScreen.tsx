@@ -127,7 +127,7 @@ export function PlanEditorScreen() {
                   className="w-full text-left"
                   onClick={() => navigate(`/planos/${planId}/t/${workout.id}`)}
                 >
-                  <p className="font-semibold">{workout.name}</p>
+                  <p className="font-display font-semibold">{workout.name}</p>
                   <p className="mt-0.5 text-sm text-muted">
                     {workout.weekday ? `${weekdayLabel(workout.weekday)} · ` : ''}
                     {counts[index]} exercício(s)

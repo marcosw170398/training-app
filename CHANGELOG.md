@@ -1,5 +1,49 @@
 # Notas de versão
 
+## v0.3.0 — 31/07/2026
+
+### Direção visual "Ferro & Cronômetro"
+
+Passe de identidade visual guiado pela skill `frontend-design`, para sair do
+padrão "fundo quase-preto + acento azul genérico" que o app tinha até aqui —
+um dos clichês mais comuns de UI gerada por IA.
+
+- **Paleta**: grafite quente (`#141210`) em vez de preto-azulado, acento único
+  Ember (`#e8551f`, disco de ferro / fita de aviso) em vez de azul-céu
+  genérico. Todo par texto/fundo medido por contraste WCAG antes de entrar
+  (7:1 a 16:1 nos principais).
+- **Tipografia**: `Space Grotesk` para nomes de treino/exercício e títulos de
+  tela; `JetBrains Mono` com algarismos tabulares em **todo número do app** —
+  carga, reps, cronômetro, datas — para não pular de largura enquanto o dígito
+  muda, e para dar uma "voz" visual só para dado, separada da prosa.
+  Auto-hospedadas (Fontsource), sem CDN — consistente com o app funcionar
+  offline.
+- **Cronômetro de descanso redesenhado**: dígitos grandes em mono, marcação a
+  cada 10s na trilha de progresso, como um cronômetro físico de parede de
+  academia. É o único elemento com essa ousadia visual — o resto do app segue
+  quieto ao redor disso, de propósito.
+- **Bordas mais contidas**: cards e botões perderam um degrau de arredondamento
+  (`rounded-2xl/3xl` → `rounded-xl` e afins) — menos "app de consumo", mais
+  ferramenta.
+
+### Modo claro
+
+Antes o app só existia em escuro. Agora: `Mais → Aparência` alterna entre
+Sistema / Claro / Escuro, persistido no aparelho (não no perfil — duas pessoas
+no mesmo celular veem a mesma aparência). Sem flash da cor errada na abertura:
+um script inline aplica a preferência salva antes do primeiro paint.
+
+As quatro cores de seção/estado (preparação, aproximação, principal, aviso)
+foram recalibradas para o claro — os tons vivos do escuro caem para
+1,5–2,5:1 de contraste em fundo claro (medido), bem abaixo do mínimo de
+leitura; o claro usa versões escurecidas das mesmas cores.
+
+### Ponto de restauração
+
+Tag `backup/pre-redesign-visual`, local e no GitHub, apontando para o estado
+imediatamente anterior a este redesign — `git checkout backup/pre-redesign-visual`
+reverte por completo se necessário.
+
 ## v0.2.0 — 30/07/2026
 
 ### Calendário e foto do treino

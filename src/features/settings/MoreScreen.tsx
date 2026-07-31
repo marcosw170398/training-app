@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { getProfileState, resetTutorial, updateProfileState } from '@/db/repositories/profiles.repo'
 import { useActiveProfile } from '@/state/activeProfile'
+import { useThemePreference, setThemePreference, type ThemePreference } from '@/state/theme'
 import { downloadBackup } from '@/features/backup/exportBackup'
 import { importBackup, type ImportResult } from '@/features/backup/importBackup'
 import { Screen } from '@/components/ui/Screen'
@@ -23,6 +24,7 @@ export function MoreScreen() {
   const [busy, setBusy] = useState(false)
 
   const state = useLiveQuery(async () => (profileId ? getProfileState(profileId) : null), [profileId])
+  const theme = useThemePreference()
 
   if (!profile || !state) return <Splash />
 
@@ -69,6 +71,31 @@ export function MoreScreen() {
         <Button size="sm" onClick={() => navigate('/perfis')}>
           Trocar
         </Button>
+      </Card>
+
+      <h2 className="mb-2 mt-6 text-sm font-medium text-muted">Aparência</h2>
+      <Card>
+        <div className="flex overflow-hidden rounded-xl border border-border">
+          {(
+            [
+              ['system', 'Sistema'],
+              ['light', 'Claro'],
+              ['dark', 'Escuro'],
+            ] as [ThemePreference, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setThemePreference(value)}
+              aria-pressed={theme === value}
+              className={[
+                'min-h-11 flex-1 text-sm',
+                theme === value ? 'bg-accent/15 font-medium text-accent' : 'text-muted',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </Card>
 
       <h2 className="mb-2 mt-6 text-sm font-medium text-muted">Durante o treino</h2>

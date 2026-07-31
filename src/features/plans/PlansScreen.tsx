@@ -71,7 +71,7 @@ export function PlansScreen() {
                   >
                     <div className="flex items-start gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{plan.name}</p>
+                        <p className="truncate font-display font-semibold">{plan.name}</p>
                         <p className="mt-0.5 text-sm text-muted">
                           {plan.type === 'periodized'
                             ? `Periodizado · ${plan.totalWeeks} semanas`

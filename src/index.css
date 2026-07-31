@@ -1,27 +1,87 @@
 @import 'tailwindcss';
 
+/**
+ * Direção "Ferro & Cronômetro": paleta grafite/ferro quente em vez do azul-
+ * escuro genérico, acento único em Ember (disco de ferro / fita de aviso),
+ * números sempre em mono tabular. Contraste de cada par medido via WCAG
+ * (fórmula de luminância relativa), não estimado a olho.
+ *
+ * Escuro é o padrão incondicional (`@theme`). O claro entra por cima em duas
+ * camadas: `prefers-color-scheme: light` cobre quem nunca escolheu nada, e
+ * `[data-theme]` cobre a escolha manual (Mais → Aparência), sempre vencendo
+ * o sistema. `src/state/theme.ts` decide o atributo; um script inline no
+ * `index.html` aplica ele antes do primeiro paint, para não haver flash da
+ * cor errada na abertura do app.
+ */
 @theme {
-  --color-bg: #0b0f14;
-  --color-surface: #131a22;
-  --color-surface-2: #1b242e;
-  --color-border: #26323f;
-  --color-text: #e8eef5;
-  --color-muted: #8ca0b6;
-  --color-accent: #38bdf8;
-  --color-accent-ink: #04212f;
+  --color-bg: #141210;
+  --color-surface: #1e1b18;
+  --color-surface-2: #262220;
+  --color-border: #332e29;
+  --color-text: #f2ede4;
+  --color-muted: #9a9086;
+  --color-accent: #e8551f;
+  --color-accent-ink: #1a0800;
+
+  /* Seção/estado do exercício — inalteradas: carregam significado, não
+     personalidade. Calibradas para os dois fundos (ver commit). */
   --color-warmup: #a78bfa;
   --color-rampup: #fbbf24;
   --color-main: #34d399;
   --color-danger: #fb7185;
 
+  /* Nomes de exercício e títulos de tela — usada com moderação, não no
+     corpo do texto. */
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  /* Sobrescreve o mono padrão do Tailwind: todo número do app — carga, reps,
+     cronômetro, datas — usa `font-mono tabular-nums` para não pular de
+     largura enquanto os dígitos mudam. */
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --color-bg: #faf7f2;
+    --color-surface: #ffffff;
+    --color-surface-2: #f1ece3;
+    --color-border: #ddd5c9;
+    --color-text: #1a1714;
+    --color-muted: #6b645a;
+    --color-accent: #b5410e;
+    --color-accent-ink: #ffffff;
+
+    /* Versões escurecidas: os tons vivos do escuro caem para 1,5–2,5:1 em
+       fundo claro (medido) — bem abaixo do mínimo de leitura. */
+    --color-warmup: #7c4de8;
+    --color-rampup: #9a6600;
+    --color-main: #0a7a50;
+    --color-danger: #d6295a;
+  }
+}
+
+:root[data-theme='light'] {
+  --color-bg: #faf7f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1ece3;
+  --color-border: #ddd5c9;
+  --color-text: #1a1714;
+  --color-muted: #6b645a;
+  --color-accent: #b5410e;
+  --color-accent-ink: #ffffff;
+  --color-warmup: #7c4de8;
+  --color-rampup: #9a6600;
+  --color-main: #0a7a50;
+  --color-danger: #d6295a;
 }
 
 @layer base {
   html {
     background-color: var(--color-bg);
     -webkit-text-size-adjust: 100%;
+    /* Evita re-flash do navegador ao trocar de tema (barra de endereço, etc). */
+    color-scheme: light dark;
   }
 
   body {
@@ -31,6 +91,9 @@
     font-family: var(--font-sans);
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
   }
 
   /* Campos numéricos sem as setinhas — atrapalham o toque com uma mão. */

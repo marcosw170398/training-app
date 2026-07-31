@@ -37,7 +37,7 @@ export function Screen({
             </button>
           ) : null}
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-xl font-semibold text-text">{title}</h1>
+            <h1 className="truncate font-display text-xl font-semibold text-text">{title}</h1>
             {subtitle ? <div className="truncate text-sm text-muted">{subtitle}</div> : null}
           </div>
           {action}

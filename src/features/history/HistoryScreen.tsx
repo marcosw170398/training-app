@@ -96,7 +96,7 @@ export function HistoryScreen() {
                   >
                     <div className="flex items-start gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{session.workoutName}</p>
+                        <p className="truncate font-display font-semibold">{session.workoutName}</p>
                         <p className="mt-0.5 text-sm text-muted">
                           {formatDateTime(session.startedAt)}
                           {session.weekNumber ? ` · semana ${session.weekNumber}` : ''}
@@ -145,7 +145,7 @@ export function HistoryScreen() {
                                     (4.5:1). muted puro já é a cor discreta. */}
                                 <span className="text-muted"> · s{log.seriesNumber}</span>
                               </span>
-                              <span className="shrink-0 tabular-nums">
+                              <span className="shrink-0 font-mono tabular-nums">
                                 {log.weight !== null ? `${log.weight} kg` : '—'}
                                 {log.reps !== null ? ` × ${log.reps}` : ''}
                                 {log.durationSeconds !== null ? ` ${log.durationSeconds}s` : ''}

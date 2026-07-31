@@ -80,7 +80,7 @@ export function TrainingCalendar({
         </button>
         <div className="text-center">
           {/* `capitalize` do CSS capitalizaria toda palavra ("Julho De 2026"). */}
-          <p className="font-semibold first-letter:uppercase">{monthLabel(ano, mes)}</p>
+          <p className="font-display font-semibold first-letter:uppercase">{monthLabel(ano, mes)}</p>
           <p className="text-xs text-muted">
             {diasTreinados} {diasTreinados === 1 ? 'dia treinado' : 'dias treinados'}
           </p>

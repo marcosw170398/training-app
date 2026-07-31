@@ -60,7 +60,7 @@ export function SetRow({
             Série {seriesNumber}
             {isExtra ? ' (extra)' : ''} · {log.targetText || '—'}
           </p>
-          <p className="font-semibold tabular-nums">
+          <p className="font-mono font-semibold tabular-nums">
             {log.weight !== null ? `${log.weight} kg` : 'sem carga'}
             {log.reps !== null ? ` × ${log.reps}` : ''}
             {log.durationSeconds !== null ? ` · ${log.durationSeconds}s` : ''}
@@ -90,7 +90,7 @@ export function SetRow({
           <p className="shrink-0 text-right text-xs text-muted">
             última
             <br />
-            <span className="tabular-nums text-text">
+            <span className="font-mono tabular-nums text-text">
               {prefill.weight !== null ? `${prefill.weight} kg` : '—'}
               {prefill.reps !== null ? ` × ${prefill.reps}` : ''}
             </span>
