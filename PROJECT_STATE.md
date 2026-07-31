@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 31/07/2026, ao final da sessão que fechou v0.4.0. Editar este
+> Atualizado em 31/07/2026, ao final da sessão que fechou v0.5.0. Editar este
 > arquivo sempre que uma tarefa terminar — é o primeiro arquivo a ler numa
 > sessão nova.
 
@@ -38,10 +38,15 @@ Por versão — detalhe de cada uma em `CHANGELOG.md`:
 - **v0.3.0**: direção visual completa + modo claro.
 - **v0.4.0**: gráfico de evolução por exercício, recorde pessoal (PR),
   notas de sessão, editar série já registrada sem apagar.
+- **v0.5.0**: card de exercício abre sozinho (o próximo ao concluir o atual;
+  ao retomar sessão, o primeiro incompleto — não sempre o primeiro da
+  lista); carga vazia herda a última usada na sessão; treino encerra sozinho
+  ao concluir o último exercício; foto pode ser acrescentada a treino já
+  encerrado, pelo histórico.
 
 ## Em desenvolvimento
 
-Nada em andamento no momento — v0.4.0 está publicada em produção.
+Nada em andamento no momento — v0.5.0 está publicada em produção.
 
 ## Problemas conhecidos
 

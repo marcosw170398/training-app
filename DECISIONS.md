@@ -141,3 +141,27 @@ qualquer pessoa.
 **Motivo:** troca de tema sem re-render de componente (só CSS), e sem flash
 da cor errada — um script inline em `index.html` aplica o atributo antes do
 primeiro paint.
+
+---
+
+### 13. Override manual de card aberto/fechado: dois conjuntos, não um flip
+
+`SessionScreen.tsx` decide qual bloco de exercício vem aberto por padrão com
+`primeiroIncompletoKey` — o primeiro, na ordem do treino, que ainda não
+terminou (recalculado a cada render a partir do banco, não fixo). O toque
+manual do usuário para abrir/fechar um bloco é guardado em **dois**
+`Set<string>` independentes (`forcedOpen`, `forcedClosed`), não em um único
+conjunto "trocado" que inverte o padrão atual.
+
+**Motivo:** a primeira versão usava um `toggled: Set<string>` só, que
+funcionava quando o padrão era ESTÁTICO (sempre o bloco 0) — "inverte o
+padrão" e "força fechado" davam no mesmo resultado, porque o padrão nunca
+mudava de bloco. Ao tornar o padrão dinâmico (primeiro INCOMPLETO, que muda
+de bloco conforme o treino avança), esse flip quebrou: um bloco marcado
+"trocado" no momento em que era o foco (force-close) reabria sozinho assim
+que o foco passava para o próximo bloco no render seguinte — porque
+`!defaultAberto` inverte contra o QUE FOR o padrão atual, não o padrão de
+quando o toggle foi criado. Bug reproduzido no navegador (dois cards abertos
+ao mesmo tempo) antes de publicar; corrigido trocando por dois conjuntos que
+não referenciam o padrão dinâmico: `forcedClosed` fecha para sempre até o
+usuário reabrir manualmente, independente de para onde o foco se mova.
