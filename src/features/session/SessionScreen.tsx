@@ -16,12 +16,15 @@ import {
   getSession,
   setGroupMode,
   toggleWarmupDone,
+  updateSessionNotes,
 } from '@/db/repositories/sessions.repo'
 import {
+  computePersonalRecords,
   deleteSetLog,
   lastSetsForExercise,
   listSetLogsOfSession,
   logSet,
+  updateSetLog,
 } from '@/db/repositories/setLogs.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { useRestTimer } from '@/hooks/useRestTimer'
@@ -41,6 +44,7 @@ import { RestTimerBar } from './RestTimerBar'
 import { SetRow } from './SetRow'
 import { draftToValues, type SetDraft } from './setDraft'
 import { SessionPhotoSheet } from './SessionPhotoSheet'
+import { SessionNotesField } from '@/features/history/SessionNotesField'
 
 interface Block {
   key: string
@@ -75,6 +79,9 @@ export function SessionScreen() {
   const [photoOpen, setPhotoOpen] = useState(false)
   const [warmupOpen, setWarmupOpen] = useState(true)
   const [finishOpen, setFinishOpen] = useState(false)
+  /** Celebração de recorde pessoal — some sozinha depois de alguns segundos. */
+  const [prToast, setPrToast] = useState<{ nome: string; peso: number } | null>(null)
+  const prToastTimer = useRef<number | null>(null)
 
   const data = useLiveQuery(async () => {
     if (!profileId) return null
@@ -103,7 +110,18 @@ export function SessionScreen() {
       )
     }
 
-    return { session, state, exercises, seriesByExercise, logs, prefills }
+    // Recordes só dos movimentos que já têm série registrada nesta sessão —
+    // computar para todo exercício do treino seria trabalho descartado para
+    // o que ainda nem foi feito.
+    const exerciseKeysComLog = new Set(logs.map((log) => log.exerciseKey))
+    const recordesPorMovimento = new Map<string, Set<Id>>()
+    await Promise.all(
+      [...exerciseKeysComLog].map(async (exerciseKey) => {
+        recordesPorMovimento.set(exerciseKey, await computePersonalRecords(profileId, exerciseKey))
+      }),
+    )
+
+    return { session, state, exercises, seriesByExercise, logs, prefills, recordesPorMovimento }
   }, [sessionId, profileId])
 
   const prefs = {
@@ -112,6 +130,11 @@ export function SessionScreen() {
   }
   const timer = useRestTimer(prefs)
   useWakeLock(Boolean(data?.state.keepScreenAwake) && data?.session.finishedAt === IN_PROGRESS)
+  useEffect(() => {
+    return () => {
+      if (prToastTimer.current) window.clearTimeout(prToastTimer.current)
+    }
+  }, [])
 
   if (!profile || data === undefined) return <Splash />
   if (data === null) {
@@ -122,7 +145,7 @@ export function SessionScreen() {
     )
   }
 
-  const { session, state, exercises, seriesByExercise, logs, prefills } = data
+  const { session, state, exercises, seriesByExercise, logs, prefills, recordesPorMovimento } = data
 
   const logsByKey = new Map<string, SetLog>()
   for (const log of logs) logsByKey.set(logKey(log.exerciseId, log.seriesNumber), log)
@@ -242,6 +265,21 @@ export function SessionScreen() {
       ...draftToValues(draftFor(exercise, row)),
     })
 
+  /**
+   * Recalcula o recorde do movimento após gravar e celebra se o log recém-
+   * criado foi quem bateu — recomputar em vez de comparar antes/depois reusa
+   * a mesma regra de desempate de `computePersonalRecords` (só supera, nunca
+   * iguala), então as duas fontes de verdade não podem divergir.
+   */
+  const celebrarSeRecorde = async (exercise: Exercise, log: SetLog) => {
+    if (log.weight === null) return
+    const recordes = await computePersonalRecords(profile.id, exercise.exerciseKey)
+    if (!recordes.has(log.id)) return
+    if (prToastTimer.current) window.clearTimeout(prToastTimer.current)
+    setPrToast({ nome: exercise.name, peso: log.weight })
+    prToastTimer.current = window.setTimeout(() => setPrToast(null), 3200)
+  }
+
   const pendentesDoBloco = (block: Block): number =>
     block.exercises.reduce(
       (total, exercise) =>
@@ -270,9 +308,10 @@ export function SessionScreen() {
 
   const complete = async (block: Block, exercise: Exercise, row: Row, withRest: boolean) => {
     const pendentesAntes = pendentesDoBloco(block)
-    await gravar(exercise, row)
+    const log = await gravar(exercise, row)
     if (withRest) startRest(exercise, row)
     recolherSeCompletou(block, pendentesAntes, 1)
+    void celebrarSeRecorde(exercise, log)
   }
 
   /**
@@ -287,8 +326,17 @@ export function SessionScreen() {
     const pendentes = rowsFor(exercise).filter(
       (row) => !logsByKey.has(logKey(exercise.id, row.seriesNumber)),
     )
-    for (const row of pendentes) await gravar(exercise, row)
+    const criados: SetLog[] = []
+    for (const row of pendentes) criados.push(await gravar(exercise, row))
     recolherSeCompletou(block, pendentesAntes, pendentes.length)
+    // Checa só a maior carga do lote — é a que teria chance de bater recorde;
+    // conferir todas gastaria consultas sem motivo.
+    const maiorLog = criados.reduce<SetLog | null>((maior, log) => {
+      if (log.weight === null) return maior
+      if (!maior || (maior.weight ?? -Infinity) < log.weight) return log
+      return maior
+    }, null)
+    if (maiorLog) void celebrarSeRecorde(exercise, maiorLog)
   }
 
   const renderExerciseRows = (block: Block, exercise: Exercise, withRest = true) => (
@@ -303,12 +351,14 @@ export function SessionScreen() {
             targetText={row.target?.targetText ?? ''}
             restText={row.target ? restLabel(row.target) : ''}
             log={log}
+            isPR={log ? (recordesPorMovimento.get(exercise.exerciseKey)?.has(log.id) ?? false) : false}
             prefill={prefills.get(exercise.id)?.get(row.seriesNumber)}
             isExtra={row.isExtra}
             draft={drafts[chave]}
             defaultDraft={defaultDraftFor(exercise, row)}
             onDraftChange={(next) => setDrafts((atual) => ({ ...atual, [chave]: next }))}
             onComplete={() => complete(block, exercise, row, withRest)}
+            onEdit={(values) => log && updateSetLog(log.id, values)}
             onUndo={() => log && deleteSetLog(log.id)}
           />
         )
@@ -360,6 +410,14 @@ export function SessionScreen() {
           ) : null
         }
       >
+        <div className="mb-4">
+          <SessionNotesField
+            sessionId={session.id}
+            initialValue={session.notes}
+            onSave={(notes) => updateSessionNotes(session.id, notes)}
+          />
+        </div>
+
         {warmups.length > 0 ? (
           <Card className="mb-4">
             <button
@@ -533,6 +591,13 @@ export function SessionScreen() {
                                           targetText={row.target?.targetText ?? ''}
                                           restText={row.target ? restLabel(row.target) : ''}
                                           log={log}
+                                          isPR={
+                                            log
+                                              ? (recordesPorMovimento
+                                                  .get(exercise.exerciseKey)
+                                                  ?.has(log.id) ?? false)
+                                              : false
+                                          }
                                           prefill={prefills
                                             .get(exercise.id)
                                             ?.get(row.seriesNumber)}
@@ -545,6 +610,7 @@ export function SessionScreen() {
                                           onComplete={() =>
                                             complete(block, exercise, row, exercise.id === last?.id)
                                           }
+                                          onEdit={(values) => log && updateSetLog(log.id, values)}
                                           onUndo={() => log && deleteSetLog(log.id)}
                                         />
                                       </div>
@@ -631,6 +697,23 @@ export function SessionScreen() {
           </Button>
         ) : null}
       </Screen>
+
+      {prToast ? (
+        <div
+          role="status"
+          className="safe-top fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-3"
+        >
+          <div className="flex items-center gap-2 rounded-xl border border-main/40 bg-main/15 px-4 py-2.5 shadow-lg backdrop-blur">
+            <span className="text-lg" aria-hidden>
+              🏆
+            </span>
+            <p className="text-sm font-medium text-text">
+              Recorde em {prToast.nome} —{' '}
+              <span className="font-mono tabular-nums text-main">{prToast.peso} kg</span>
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <RestTimerBar timer={timer} />
 

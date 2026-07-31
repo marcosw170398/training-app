@@ -112,6 +112,49 @@ export async function updateSetLog(
   await db.setLogs.update(id, patch)
 }
 
+/**
+ * Maior carga já registrada nesse movimento (seção `main`), ANTES de um dado
+ * instante. Usada para decidir, no momento de gravar uma série, se ela acabou
+ * de bater o recorde — comparar contra o máximo incluindo a própria série
+ * marcaria toda série no peso máximo como recorde, não só a que o alcançou.
+ */
+export async function maxWeightBefore(
+  profileId: Id,
+  exerciseKey: string,
+  beforeTimestamp: number,
+): Promise<number | null> {
+  const logs = await historyForExercise(profileId, exerciseKey, 'main')
+  let max: number | null = null
+  for (const log of logs) {
+    if (log.performedAt >= beforeTimestamp) continue
+    if (log.weight !== null && (max === null || log.weight > max)) max = log.weight
+  }
+  return max
+}
+
+/**
+ * Percorre o histórico do movimento em ordem cronológica e marca os `SetLog`
+ * que, no momento em que foram feitos, bateram a maior carga até então —
+ * exatamente a definição de recorde pessoal. Empate no mesmo peso não conta
+ * como novo recorde (só supera, nunca iguala).
+ */
+export async function computePersonalRecords(
+  profileId: Id,
+  exerciseKey: string,
+): Promise<Set<Id>> {
+  const logs = await historyForExercise(profileId, exerciseKey, 'main')
+  const cronologico = [...logs].reverse()
+  const recordes = new Set<Id>()
+  let max: number | null = null
+  for (const log of cronologico) {
+    if (log.weight !== null && (max === null || log.weight > max)) {
+      max = log.weight
+      recordes.add(log.id)
+    }
+  }
+  return recordes
+}
+
 export async function deleteSetLog(id: Id): Promise<void> {
   await db.setLogs.delete(id)
 }

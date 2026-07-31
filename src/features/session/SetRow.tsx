@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { SetLog } from '@/db/schema'
 import { NumberStepper } from '@/components/ui/NumberStepper'
 import { formatDate } from '@/lib/date'
@@ -16,12 +16,14 @@ export function SetRow({
   targetText,
   restText,
   log,
+  isPR,
   prefill,
   isExtra,
   draft,
   defaultDraft,
   onDraftChange,
   onComplete,
+  onEdit,
   onUndo,
 }: {
   seriesNumber: number
@@ -29,6 +31,8 @@ export function SetRow({
   restText: string
   /** Já registrado nesta sessão. */
   log?: SetLog
+  /** A carga registrada bateu o recorde do movimento no momento em que foi feita. */
+  isPR?: boolean
   /** Última execução deste movimento/série — origem da carga sugerida. */
   prefill?: SetLog
   isExtra: boolean
@@ -36,9 +40,14 @@ export function SetRow({
   defaultDraft: SetDraft
   onDraftChange: (next: SetDraft) => void
   onComplete: () => void
+  /** Corrige um número já registrado, sem apagar e refazer a série. */
+  onEdit: (values: { weight: number | null; reps: number | null }) => void
   onUndo: () => void
 }) {
   const atual = draft ?? defaultDraft
+  const [editando, setEditando] = useState(false)
+  const [pesoEdit, setPesoEdit] = useState('')
+  const [repsEdit, setRepsEdit] = useState('')
 
   // Semeia o rascunho na primeira renderização da linha, para que a tela de
   // execução conheça os valores sugeridos mesmo sem o usuário tocar no campo.
@@ -49,9 +58,59 @@ export function SetRow({
 
   const alterar = (patch: Partial<SetDraft>) => onDraftChange({ ...atual, ...patch })
 
+  const abrirEdicao = () => {
+    setPesoEdit(log?.weight != null ? String(log.weight) : '')
+    setRepsEdit(log?.reps != null ? String(log.reps) : '')
+    setEditando(true)
+  }
+
+  const toNumero = (valor: string): number | null => {
+    const n = Number(valor.replace(',', '.'))
+    return valor.trim() === '' || Number.isNaN(n) ? null : n
+  }
+
+  const salvarEdicao = () => {
+    onEdit({ weight: toNumero(pesoEdit), reps: toNumero(repsEdit) })
+    setEditando(false)
+  }
+
+  if (log && editando) {
+    return (
+      <div className="rounded-xl border border-accent/40 bg-surface-2/40 p-3">
+        <p className="mb-2 text-sm text-muted">
+          Editando série {seriesNumber}
+          {isExtra ? ' (extra)' : ''} · {log.targetText || '—'}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <NumberStepper label="Carga (kg)" value={pesoEdit} onChange={setPesoEdit} step={2.5} placeholder="—" />
+          <NumberStepper label="Repetições" value={repsEdit} onChange={setRepsEdit} step={1} placeholder="—" />
+        </div>
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={() => setEditando(false)}
+            className="min-h-11 flex-1 rounded-lg border border-border text-sm text-muted"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvarEdicao}
+            className="min-h-11 flex-1 rounded-lg bg-accent text-sm font-semibold text-accent-ink"
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (log) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-main/30 bg-main/5 px-3 py-3">
+      <div
+        className={[
+          'flex items-center gap-3 rounded-xl border px-3 py-3',
+          isPR ? 'border-main/50 bg-main/10' : 'border-main/30 bg-main/5',
+        ].join(' ')}
+      >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-main/15 text-sm font-semibold text-main">
           ✓
         </span>
@@ -64,8 +123,12 @@ export function SetRow({
             {log.weight !== null ? `${log.weight} kg` : 'sem carga'}
             {log.reps !== null ? ` × ${log.reps}` : ''}
             {log.durationSeconds !== null ? ` · ${log.durationSeconds}s` : ''}
+            {isPR ? <span className="ml-2 font-sans text-xs font-medium text-main">🏆 recorde</span> : null}
           </p>
         </div>
+        <button onClick={abrirEdicao} className="shrink-0 px-2 py-2 text-sm text-muted active:text-accent">
+          editar
+        </button>
         <button onClick={onUndo} className="shrink-0 px-2 py-2 text-sm text-muted active:text-danger">
           desfazer
         </button>

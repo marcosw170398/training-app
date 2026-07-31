@@ -9,6 +9,7 @@ import { PlansScreen } from '@/features/plans/PlansScreen'
 import { PlanEditorScreen } from '@/features/plans/PlanEditorScreen'
 import { WorkoutEditorScreen } from '@/features/plans/WorkoutEditorScreen'
 import { HistoryScreen } from '@/features/history/HistoryScreen'
+import { ExerciseHistoryScreen } from '@/features/history/ExerciseHistoryScreen'
 import { MoreScreen } from '@/features/settings/MoreScreen'
 import { StartSessionScreen } from '@/features/session/StartSessionScreen'
 import { SessionScreen } from '@/features/session/SessionScreen'
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           Component: (await import('@/features/import/ImportScreen')).ImportScreen,
         }),
       },
+      { path: '/historico/ex/:exerciseKey', element: <ExerciseHistoryScreen /> },
       { path: '/planos/:planId', element: <PlanEditorScreen /> },
       { path: '/planos/:planId/t/:workoutId', element: <WorkoutEditorScreen /> },
       { path: '/treinar/:workoutId', element: <StartSessionScreen /> },

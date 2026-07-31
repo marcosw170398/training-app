@@ -1,5 +1,36 @@
 # Notas de versão
 
+## v0.4.0 — 31/07/2026
+
+### Evolução por exercício
+
+Nova aba "Exercícios" no Histórico: lista os movimentos já treinados e abre
+um gráfico de carga ao longo do tempo para cada um (`/historico/ex/:chave`).
+SVG desenhado à mão, sem biblioteca de gráfico — o eixo X é por sessão, não
+por data corrida, para meses sem treino não esticarem a linha e esconderem a
+tendência recente. O ponto plotado é a maior carga do dia naquele movimento,
+não cada série solta — uma pirâmide de 15-20-8-12 não deveria parecer
+instável no gráfico.
+
+### Recorde pessoal (PR)
+
+Ao concluir uma série que bate a maior carga já registrada naquele
+movimento, o app celebra: um aviso passageiro no topo da tela e um selo 🏆
+na série, no histórico e no gráfico. Empate no mesmo peso não conta — só
+supera, nunca iguala. Só vale para exercícios "principal"; aproximação e
+preparação não entram na comparação, consistente com o resto do app.
+
+### Notas de sessão
+
+Campo "+ Adicionar nota" na execução e no histórico ("senti dor no ombro",
+"treino puxado hoje"), editável nos dois lugares. Recolhido por padrão
+quando vazio — a maioria dos treinos não tem nota.
+
+### Editar série já registrada
+
+Botão "editar" ao lado de "desfazer" em toda série concluída: corrige um
+número digitado errado sem precisar apagar e refazer.
+
 ## v0.3.0 — 31/07/2026
 
 ### Direção visual "Ferro & Cronômetro"
