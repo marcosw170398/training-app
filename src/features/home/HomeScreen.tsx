@@ -7,7 +7,7 @@ import { listWorkoutsOfWeek } from '@/db/repositories/workouts.repo'
 import { getInProgressSession, lastSessionByWorkout } from '@/db/repositories/sessions.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { daysSince, formatDate, relativeDays } from '@/lib/date'
-import { todayWeekday, weekdayLabel, weekdayShort } from '@/lib/weekday'
+import { todayWeekday, weekdayShort } from '@/lib/weekday'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -203,7 +203,6 @@ export function HomeScreen() {
                           ) : null}
                         </div>
                         <p className="mt-0.5 text-sm text-muted">
-                          {workout.weekday ? `${weekdayLabel(workout.weekday)} · ` : ''}
                           {lastAt
                             ? `última vez ${formatDate(lastAt)} (${relativeDays(lastAt)})`
                             : 'nunca feito'}

@@ -157,10 +157,12 @@ export function ImportExerciseRow({
                 className={`${CAMPO} min-w-0 flex-1`}
                 aria-label={`Alvo da série ${indice + 1}`}
               />
+              {/* min-h/w-11 = 44px: alvo mínimo de toque, colado a um campo de
+                  texto editável — apertado aqui é onde se apaga série à toa. */}
               <button
                 onClick={() => removerSerie(indice)}
                 aria-label={`Remover série ${indice + 1}`}
-                className="flex size-7 shrink-0 items-center justify-center rounded-lg text-danger active:bg-danger/10"
+                className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-danger active:bg-danger/10"
               >
                 ×
               </button>

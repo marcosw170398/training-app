@@ -15,6 +15,7 @@ import {
 import { getWorkout } from '@/db/repositories/workouts.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { weekdayLabel } from '@/lib/weekday'
+import { deaccent } from '@/lib/text'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -69,10 +70,22 @@ export function WorkoutEditorScreen() {
     setFormOpen(true)
   }
 
+  // Um plano importado costuma nomear o treino pelo próprio dia
+  // ("SEGUNDA-FEIRA"), e mostrar "Segunda-feira" nesse caso duplicaria o
+  // título — e pior, ESCONDIA a contagem de exercícios. Mostra o dia só
+  // quando ele não repete o que o título já diz.
+  const diaJaNoTitulo = workout.weekday
+    ? deaccent(workout.name).includes(deaccent(weekdayLabel(workout.weekday)))
+    : false
+  const partesSubtitulo = [
+    workout.weekday && !diaJaNoTitulo ? weekdayLabel(workout.weekday) : null,
+    `${exercises.length} exercício(s)`,
+  ].filter(Boolean)
+
   return (
     <Screen
       title={workout.name}
-      subtitle={workout.weekday ? weekdayLabel(workout.weekday) : `${exercises.length} exercício(s)`}
+      subtitle={partesSubtitulo.join(' · ')}
       back={`/planos/${planId}`}
     >
       {exercises.length === 0 ? (

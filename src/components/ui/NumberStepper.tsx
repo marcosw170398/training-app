@@ -34,9 +34,18 @@ export function NumberStepper({
   }
 
   return (
-    <div>
-      {label ? <span className="mb-1 block text-xs text-muted">{label}</span> : null}
-      <div className="flex items-stretch overflow-hidden rounded-xl border border-border bg-surface-2">
+    // `min-w-0`: sem isso, um item de grid não encolhe abaixo da largura
+    // natural do próprio conteúdo — este componente estourava o container
+    // de `grid-cols-[1fr_1fr_auto]` e empurrava "Repetições" e o botão ✓
+    // para fora da tela em telas de 375px.
+    <div className="min-w-0">
+      {label ? (
+        <span className="mb-1 block truncate text-xs text-muted">{label}</span>
+      ) : null}
+      {/* O anel de foco vai no WRAPPER, não no input: o wrapper tem
+          `overflow-hidden`, então um outline no filho seria cortado e um
+          usuário navegando por teclado não veria onde está. */}
+      <div className="flex items-stretch overflow-hidden rounded-xl border border-border bg-surface-2 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent">
         <button
           type="button"
           aria-label="Diminuir"

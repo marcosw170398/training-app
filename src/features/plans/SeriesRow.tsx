@@ -48,10 +48,14 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           placeholder="Alvo: 8-12, até a falha, 100 reps…"
           className={`${cell} min-w-0 flex-1`}
         />
+        {/* min-h/w-11 = 44px: alvo de toque mínimo. O glifo "×" fica pequeno,
+            mas está colado a um campo de texto editável — uma área de toque
+            apertada aqui é justamente onde um dedo erra e apaga a série
+            errada por engano. */}
         <button
           aria-label={`Remover série ${target.seriesNumber}`}
           onClick={() => deleteSeries(target.id)}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-danger active:bg-danger/10"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-danger active:bg-danger/10"
         >
           ×
         </button>

@@ -140,7 +140,10 @@ export function HistoryScreen() {
                             <div key={log.id} className="flex gap-2 text-sm">
                               <span className="min-w-0 flex-1 truncate text-muted">
                                 {log.exerciseName}
-                                <span className="text-muted/60"> · s{log.seriesNumber}</span>
+                                {/* muted/60 media 2,57:1 de contraste sobre o
+                                    fundo do card — abaixo do mínimo de leitura
+                                    (4.5:1). muted puro já é a cor discreta. */}
+                                <span className="text-muted"> · s{log.seriesNumber}</span>
                               </span>
                               <span className="shrink-0 tabular-nums">
                                 {log.weight !== null ? `${log.weight} kg` : '—'}
