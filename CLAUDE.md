@@ -5,18 +5,34 @@ Este arquivo é lido automaticamente no início de toda sessão. Os outros três
 antes de começar qualquer tarefa. Mantê-los pequenos e atualizados é o que evita
 reabrir o histórico completo da conversa a cada sessão nova.
 
-## Fluxo por sessão
+## Ao começar uma tarefa nova
 
-1. Leia `PROJECT_STATE.md` (estado atual) e `TODO.md` (pendências) antes de
-   escrever qualquer código.
-2. Implemente a tarefa.
-3. Verifique de verdade: `npx tsc -b`, `npm run lint`, e para mudança visível
-   na UI, abra no navegador e confirme — não reporte "pronto" sem checar.
-4. Atualize `PROJECT_STATE.md` (o que mudou) e, se a mudança envolveu uma
-   escolha não óbvia, acrescente uma entrada em `DECISIONS.md`.
-5. Se a sessão for de features grandes, acrescente uma entrada nova no topo do
-   `CHANGELOG.md` (histórico de versão, visível ao usuário) — é diferente de
-   `PROJECT_STATE.md` (estado interno, para retomar contexto).
+1. Leia `CLAUDE.md` (este arquivo), `PROJECT_STATE.md` e `TODO.md`.
+2. Use **somente** essas informações como contexto do projeto. Não presuma
+   nada sobre conversas anteriores que não esteja registrado nesses arquivos
+   — se não está escrito lá, trate como não sabido.
+3. Implemente a tarefa, verificando de verdade antes de dizer "pronto":
+   `npx tsc -b`, `npm run lint`, e para mudança visível na UI, abrir no
+   navegador e confirmar.
+
+## Ao terminar uma tarefa
+
+1. Atualize `PROJECT_STATE.md` para refletir o **estado final atual** —
+   remova o que ficou obsoleto. Não descreva o processo ("tentei X, depois Y,
+   corrigi Z"); descreva só como as coisas são agora. Processo/histórico é
+   assunto do `git log` e do `CHANGELOG.md`, não deste arquivo.
+2. Atualize `TODO.md` (marque concluído, remova, ou acrescente o que surgiu).
+3. Se a tarefa envolveu uma decisão arquitetural não óbvia, registre em
+   `DECISIONS.md` com o motivo.
+4. Se a sessão foi de feature grande visível ao usuário, acrescente uma
+   entrada no topo do `CHANGELOG.md`.
+
+## Se a conversa ficar muito grande
+
+Sugira ao usuário abrir um chat novo. Na sessão nova, leia os quatro:
+`CLAUDE.md`, `PROJECT_STATE.md`, `TODO.md`, `DECISIONS.md` — o quarto entra
+aqui porque decisão arquitetural importa para retomar um projeto grande,
+mesmo não sendo necessário para toda tarefa pequena do dia a dia.
 
 ## Regras específicas deste projeto
 
