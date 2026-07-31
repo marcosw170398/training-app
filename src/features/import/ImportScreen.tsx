@@ -7,6 +7,7 @@ import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Field, TextInput } from '@/components/ui/Field'
 import { Sheet } from '@/components/ui/Sheet'
+import { Chevron } from '@/components/ui/Chevron'
 import { Splash } from '@/app/Splash'
 import { weekdayLabel } from '@/lib/weekday'
 import { readPlanFromPdf, type ImportProgress } from './importPdf'
@@ -266,7 +267,7 @@ export function ImportScreen() {
                         aria-label={aberto ? 'Recolher' : 'Expandir'}
                         className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted active:bg-surface-2"
                       >
-                        {aberto ? '^' : 'v'}
+                        <Chevron open={aberto} />
                       </button>
                     </div>
 

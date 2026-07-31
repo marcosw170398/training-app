@@ -34,6 +34,7 @@ import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { SectionBadge } from '@/components/ui/SectionBadge'
+import { Chevron } from '@/components/ui/Chevron'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Splash } from '@/app/Splash'
 import { RestTimerBar } from './RestTimerBar'
@@ -369,7 +370,7 @@ export function SessionScreen() {
               <span className="min-w-0 flex-1 text-sm text-muted">
                 {session.warmupDone.length}/{warmups.length} feitos
               </span>
-              <span className="text-muted">{warmupOpen ? '^' : 'v'}</span>
+              <Chevron open={warmupOpen} className="text-muted" />
             </button>
 
             {warmupOpen ? (
@@ -467,7 +468,7 @@ export function SessionScreen() {
                           {isGroup ? ` · bi-set ${block.group}` : ''}
                         </span>
                       </div>
-                      <span className="shrink-0 px-1 text-xl text-muted">{aberto ? '^' : 'v'}</span>
+                      <Chevron open={aberto} className="shrink-0 text-muted" />
                     </button>
 
                     {!aberto ? null : (

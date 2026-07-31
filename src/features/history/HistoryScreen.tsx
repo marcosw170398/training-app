@@ -9,6 +9,7 @@ import { useActiveProfile } from '@/state/activeProfile'
 import { formatDate, formatDateTime, formatDuration } from '@/lib/date'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
+import { Chevron } from '@/components/ui/Chevron'
 import { Splash } from '@/app/Splash'
 import { TrainingCalendar } from './TrainingCalendar'
 
@@ -106,7 +107,7 @@ export function HistoryScreen() {
                           {duration !== null ? ` · ${formatDuration(duration)}` : ' · em andamento'}
                         </p>
                       </div>
-                      <span className="text-muted">{isOpen ? '^' : 'v'}</span>
+                      <Chevron open={isOpen} className="text-muted" />
                     </div>
                   </button>
 
