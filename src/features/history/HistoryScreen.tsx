@@ -106,7 +106,7 @@ export function HistoryScreen() {
                           {duration !== null ? ` · ${formatDuration(duration)}` : ' · em andamento'}
                         </p>
                       </div>
-                      <span className="text-muted">{isOpen ? '−' : '+'}</span>
+                      <span className="text-muted">{isOpen ? '^' : 'v'}</span>
                     </div>
                   </button>
 

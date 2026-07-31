@@ -266,7 +266,7 @@ export function ImportScreen() {
                         aria-label={aberto ? 'Recolher' : 'Expandir'}
                         className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted active:bg-surface-2"
                       >
-                        {aberto ? '−' : '+'}
+                        {aberto ? '^' : 'v'}
                       </button>
                     </div>
 
