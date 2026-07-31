@@ -38,7 +38,13 @@ export function Screen({
           ) : null}
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-display text-xl font-semibold text-text">{title}</h1>
-            {subtitle ? <div className="truncate text-sm text-muted">{subtitle}</div> : null}
+            {/* Sem truncate: um subtítulo composto (ex.: "Semana 01 · 46min ·
+                0/7 exercícios") cortava com reticências antes do dado mais
+                importante — quantos exercícios faltam. Quebra em 2 linhas em
+                vez de esconder informação. */}
+            {subtitle ? (
+              <div className="line-clamp-2 text-sm text-muted">{subtitle}</div>
+            ) : null}
           </div>
           {action}
         </div>
