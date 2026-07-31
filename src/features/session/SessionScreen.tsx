@@ -64,8 +64,11 @@ export function SessionScreen() {
   const [pendingExtras, setPendingExtras] = useState<Record<Id, number>>({})
   /** Rascunho de cada série pendente, por `exerciseId|seriesNumber`. */
   const [drafts, setDrafts] = useState<Record<string, SetDraft>>({})
-  /** Exercícios recolhidos, por chave de bloco. */
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  /**
+   * Chaves de bloco cujo estado ABERTO/FECHADO foi trocado manualmente — o
+   * padrão em si (só o primeiro aberto) não fica salvo aqui, só o desvio dele.
+   */
+  const [toggled, setToggled] = useState<Set<string>>(new Set())
   /** Blocos já recolhidos automaticamente — evita recolher de novo se reabrir. */
   const autoCollapsed = useRef<Set<string>>(new Set())
   const [photoOpen, setPhotoOpen] = useState(false)
@@ -139,6 +142,15 @@ export function SessionScreen() {
       consumed.add(exercise.id)
       blocks.push({ key: exercise.id, group: null, exercises: [exercise] })
     }
+  }
+
+  // Só o primeiro bloco vem aberto por padrão — o resto fica fechado até o
+  // usuário tocar. Ordem estável (vem de `listExercises`), então a mesma
+  // chave permanece "o primeiro" durante toda a sessão.
+  const primeiroBlocoKey = blocks[0]?.key
+  const isBlockOpen = (block: Block): boolean => {
+    const defaultAberto = block.key === primeiroBlocoKey
+    return toggled.has(block.key) ? !defaultAberto : defaultAberto
   }
 
   const rowsFor = (exercise: Exercise): Row[] => {
@@ -243,7 +255,16 @@ export function SessionScreen() {
     if (pendentesAntes - gravadas > 0) return
     if (autoCollapsed.current.has(block.key)) return
     autoCollapsed.current.add(block.key)
-    setCollapsed((atual) => new Set(atual).add(block.key))
+    // Força fechado independente do padrão: se era o primeiro bloco (aberto
+    // por padrão), marca como trocado; se já era fechado por padrão, garante
+    // que nenhuma abertura manual anterior continue valendo.
+    const defaultAberto = block.key === primeiroBlocoKey
+    setToggled((atual) => {
+      const proximo = new Set(atual)
+      if (defaultAberto) proximo.add(block.key)
+      else proximo.delete(block.key)
+      return proximo
+    })
   }
 
   const complete = async (block: Block, exercise: Exercise, row: Row, withRest: boolean) => {
@@ -409,7 +430,7 @@ export function SessionScreen() {
                 0,
               )
               const feitas = totalRows - pendentesDoBloco(block)
-              const aberto = !collapsed.has(block.key)
+              const aberto = isBlockOpen(block)
 
               return (
                 <li key={block.key}>
@@ -418,7 +439,7 @@ export function SessionScreen() {
                         achar o exercício de relance com o card fechado. */}
                     <button
                       onClick={() =>
-                        setCollapsed((atual) => {
+                        setToggled((atual) => {
                           const proximo = new Set(atual)
                           if (proximo.has(block.key)) proximo.delete(block.key)
                           else proximo.add(block.key)
