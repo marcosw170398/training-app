@@ -30,6 +30,7 @@ export function ProfileFormSheet({
   const [color, setColor] = useState(PROFILE_COLORS[0])
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null)
   const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -37,15 +38,19 @@ export function ProfileFormSheet({
     setName(profile?.name ?? '')
     setColor(profile?.color ?? PROFILE_COLORS[0])
     setPhotoBlob(profile?.photoBlob ?? null)
+    setPhotoError(null)
   }, [open, profile])
 
   const canSave = name.trim().length > 0
 
   const onPickPhoto = async (file: File) => {
     setPhotoBusy(true)
+    setPhotoError(null)
     try {
       const { blob } = await reduzirImagem(file, AVATAR_MAX_SIDE, 0.85)
       setPhotoBlob(blob)
+    } catch {
+      setPhotoError('Não consegui usar essa imagem — tente outra foto.')
     } finally {
       setPhotoBusy(false)
     }
@@ -69,6 +74,7 @@ export function ProfileFormSheet({
             </Button>
           ) : null}
         </div>
+        {photoError ? <p className="text-sm text-danger">{photoError}</p> : null}
         <input
           ref={fileInput}
           type="file"

@@ -2,6 +2,15 @@
 
 ## v0.6.0 — 01/08/2026
 
+### Foto de perfil
+
+Cada perfil pode ter uma foto, além da cor/inicial de sempre. Ao criar ou
+editar um perfil, dá pra escolher uma imagem da galeria (ou tirar uma foto);
+ela substitui o círculo de inicial em toda a tela onde o avatar aparece —
+seleção de perfil, gerenciar perfis, home e "Mais". "Remover foto" volta
+para a inicial. Como a foto de treino, fica só no IndexedDB do aparelho e
+não entra no backup JSON (blob binário).
+
 ### 1RM estimado
 
 O histórico de cada exercício ganhou um terceiro cartão de estatística, ao

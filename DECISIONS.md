@@ -182,3 +182,22 @@ tido a chance de treinar de novo. Se a contagem partisse de "hoje", a
 sequência cairia para 0 assim que a semana corrente ainda não tivesse
 treino, mesmo que a pessoa tenha treinado toda semana até aqui. Exibida na
 home só a partir de 2 semanas — 1 semana isolada não é "sequência".
+
+---
+
+### 15. Campo com valor herdado/sugerido seleciona tudo ao focar
+
+Nome de treino novo (sugestão "Treino B", a próxima letra) e os campos de
+uma série nova (`addSeries` copia alvo/descanso da série anterior) chegam
+com texto já preenchido, não vazio. `WorkoutFormSheet.tsx` (só quando
+`!workout`, ou seja, criando) e todo campo de `SeriesRow.tsx` selecionam o
+conteúdo inteiro no `onFocus`.
+
+**Motivo:** sem isso, clicar no campo e digitar por cima GRUDA o texto
+digitado no que já estava lá em vez de substituir — bug real, reproduzido
+duas vezes (nome de treino virou "Treino ATreino A", alvo de série virou
+"8-128-12"). O padrão "copiar do anterior para economizar digitação" é
+deliberado (ver comentário em `exercises.repo.ts` → `addSeries`); o problema
+era só a falta de seleção ao focar. Editar um treino já existente
+(`workout` presente em `WorkoutFormSheet`) fica de fora de propósito —
+apagar ali é ação deliberada do usuário, não teria o mesmo problema.

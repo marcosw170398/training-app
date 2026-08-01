@@ -43,28 +43,30 @@ Por versão — detalhe de cada uma em `CHANGELOG.md`:
   lista); carga vazia herda a última usada na sessão; treino encerra sozinho
   ao concluir o último exercício; foto pode ser acrescentada a treino já
   encerrado, pelo histórico.
-- **v0.6.0**: 1RM estimado (Epley) no histórico do exercício; sugestão de
-  progressão de carga na execução, quando as últimas 3 séries bateram o topo
-  da faixa prescrita; sequência de semanas seguidas treinando, exibida na
-  home a partir de 2 semanas.
+- **v0.6.0**: foto de perfil (opcional, substitui a inicial no `Avatar` em
+  toda a UI — reduzida no navegador com o mesmo utilitário da foto de
+  treino, `reduzirImagem`; campo `photoBlob` não indexado em `Profile`, sem
+  subir versão do Dexie); 1RM estimado (Epley) no histórico do exercício;
+  sugestão de progressão de carga na execução, quando as últimas 3 séries
+  bateram o topo da faixa prescrita; sequência de semanas seguidas
+  treinando, exibida na home a partir de 2 semanas.
 
 ## Em desenvolvimento
 
-Nada em andamento no momento — v0.6.0 está publicada em produção.
+Nada em andamento no momento — v0.6.0 (1RM, progressão, sequência de
+semanas, foto de perfil) já está commitada, publicada no GitHub e em
+produção no Vercel.
 
 ## Problemas conhecidos
 
 - **OCR em PDF digitalizado é rascunho, não importação fiel.** Nos PDFs de
   teste, ~10 de 35 exercícios ficam sem série (OCR perdeu a linha) — o app
   marca isso na conferência, não esconde. PDF com camada de texto é fiel.
-- **Backup JSON não inclui fotos** (blob binário, decisão explícita do
-  usuário — não é lacuna, é escolha).
+- **Backup JSON não inclui fotos** (foto de treino nem foto de perfil — blob
+  binário, decisão explícita do usuário — não é lacuna, é escolha).
 - **Vercel Deployment Protection está desligada de propósito** — necessário
   para o service worker instalar. App é público, mas sem login nem dado no
   servidor; quem abrir o link só vê o app vazio.
-- Alguns itens de lista clicáveis (`Card` com `onClick`) não têm
-  `aria-label` explícito — apoiam-se no texto visível interno. Padrão
-  pré-existente, não regressão introduzida recentemente.
 
 ## Próximo passo
 

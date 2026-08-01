@@ -4,15 +4,24 @@ export function Card({
   children,
   className = '',
   onClick,
+  ariaLabel,
 }: {
   children: ReactNode
   className?: string
   onClick?: () => void
+  /** Nome acessível explícito — o card costuma juntar vários textos soltos
+      (nome, contagem, "última vez"), e o leitor de tela concatena tudo sem
+      pontuação a menos que isso seja dito de forma explícita. */
+  ariaLabel?: string
 }) {
   const base = 'rounded-xl border border-border bg-surface p-4'
   if (!onClick) return <div className={`${base} ${className}`}>{children}</div>
   return (
-    <button onClick={onClick} className={`${base} w-full text-left active:bg-surface-2 ${className}`}>
+    <button
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`${base} w-full text-left active:bg-surface-2 ${className}`}
+    >
       {children}
     </button>
   )

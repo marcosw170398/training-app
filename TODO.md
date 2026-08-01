@@ -16,12 +16,7 @@ alguém começar.
 
 ## Levantado durante o trabalho, não implementado (baixa prioridade)
 
-- `aria-label` explícito nos itens de lista que são `Card` clicável — hoje
-  dependem do texto interno para leitor de tela inferir o nome acessível.
-- Publicar releases formais no GitHub. Só existe a tag `v0.1.0` (anotada,
-  local + remoto); v0.2.0/v0.3.0/v0.4.0 do `CHANGELOG.md` não têm tag
-  correspondente. Criar as tags que faltam e o *release* na interface exige
-  `gh` autenticado — não instalado nesta máquina.
+- Nenhum no momento.
 
 ## Ideias soltas, nunca formalmente propostas para o usuário
 

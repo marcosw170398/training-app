@@ -125,7 +125,10 @@ export function HistoryScreen() {
           <ul className="space-y-2">
             {exercicios.map((item) => (
               <li key={item.exerciseKey}>
-                <Card onClick={() => navigate(`/historico/ex/${item.exerciseKey}`)}>
+                <Card
+                  onClick={() => navigate(`/historico/ex/${item.exerciseKey}`)}
+                  ariaLabel={`${item.name}, ${item.count} série(s), última vez ${relativeDays(item.lastAt)}`}
+                >
                   <div className="flex items-center gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-display font-semibold">{item.name}</p>

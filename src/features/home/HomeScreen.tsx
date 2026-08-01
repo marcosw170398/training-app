@@ -202,6 +202,9 @@ export function HomeScreen() {
                   <Card
                     onClick={() => navigate(`/treinar/${workout.id}`)}
                     className={isSuggested ? 'border-accent/60' : ''}
+                    ariaLabel={`${workout.name}${isSuggested ? (isToday ? ', hoje' : ', sugerido') : ''}, ${
+                      lastAt ? `última vez ${formatDate(lastAt)}, ${relativeDays(lastAt)}` : 'nunca feito'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="min-w-0 flex-1">

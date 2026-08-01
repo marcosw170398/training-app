@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FocusEvent } from 'react'
 import type { SeriesTarget } from '@/db/schema'
 import { deleteSeries, updateSeries } from '@/db/repositories/exercises.repo'
 
@@ -7,6 +7,12 @@ import { deleteSeries, updateSeries } from '@/db/repositories/exercises.repo'
  * `useLiveQuery` re-renderizar e jogar o cursor para o fim do campo.
  */
 export function SeriesRow({ target }: { target: SeriesTarget }) {
+  // `addSeries` herda o alvo/descanso da série anterior (economiza digitação
+  // — a maioria das séries repete a mesma faixa). Sem selecionar tudo ao
+  // focar, digitar por cima só GRUDA no valor herdado em vez de substituí-lo
+  // (ex: "8-12" herdado + digitar "8-12" de novo = "8-128-12").
+  const selectAll = (event: FocusEvent<HTMLInputElement>) => event.target.select()
+
   const [text, setText] = useState(target.targetText)
   const [min, setMin] = useState(target.restSecondsMin?.toString() ?? '')
   const [max, setMax] = useState(target.restSecondsMax?.toString() ?? '')
@@ -45,6 +51,7 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           value={text}
           onChange={(event) => setText(event.target.value)}
           onBlur={commit}
+          onFocus={selectAll}
           placeholder="Alvo: 8-12, até a falha, 100 reps…"
           className={`${cell} min-w-0 flex-1`}
         />
@@ -68,6 +75,7 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           value={min}
           onChange={(event) => setMin(event.target.value)}
           onBlur={commit}
+          onFocus={selectAll}
           inputMode="numeric"
           placeholder="—"
           aria-label="Descanso mínimo em segundos"
@@ -78,6 +86,7 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           value={max}
           onChange={(event) => setMax(event.target.value)}
           onBlur={commit}
+          onFocus={selectAll}
           inputMode="numeric"
           placeholder="—"
           aria-label="Descanso máximo em segundos"
@@ -91,6 +100,7 @@ export function SeriesRow({ target }: { target: SeriesTarget }) {
           value={note}
           onChange={(event) => setNote(event.target.value)}
           onBlur={commit}
+          onFocus={selectAll}
           placeholder="Nota de descanso (ex: um lado após o outro)"
           className={`${cell} w-full`}
         />

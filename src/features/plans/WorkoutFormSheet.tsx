@@ -34,6 +34,12 @@ export function WorkoutFormSheet({
           <TextInput
             value={name}
             onChange={(event) => setName(event.target.value)}
+            // Treino novo já chega com nome sugerido ("Treino B", a próxima
+            // letra) preenchido no campo — sem selecionar tudo ao focar, digitar
+            // o nome de verdade só GRUDA no sugerido em vez de substituí-lo
+            // ("Treino ATreino A"). Não afeta editar um treino já existente
+            // (`workout` presente), onde apagar de propósito é o esperado.
+            onFocus={!workout ? (event) => event.target.select() : undefined}
             placeholder="Ex: Treino A · Segunda-feira"
           />
         </Field>
