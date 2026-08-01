@@ -134,6 +134,8 @@ export async function importBackup(raw: unknown, mode: ImportMode): Promise<Impo
         id,
         name: profile.name.trim() || `Perfil ${existingCount + index + 1}`,
         color: profile.color ?? PROFILE_COLORS[(existingCount + index) % PROFILE_COLORS.length],
+        // Backup não carrega foto (blob binário) — perfil importado sempre entra sem foto.
+        photoBlob: null,
         order: existingCount + index,
         createdAt: parseTimestamp(profile.createdAt, now),
       })

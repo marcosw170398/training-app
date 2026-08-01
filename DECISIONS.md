@@ -165,3 +165,20 @@ quando o toggle foi criado. Bug reproduzido no navegador (dois cards abertos
 ao mesmo tempo) antes de publicar; corrigido trocando por dois conjuntos que
 não referenciam o padrão dinâmico: `forcedClosed` fecha para sempre até o
 usuário reabrir manualmente, independente de para onde o foco se mova.
+
+---
+
+### 14. Sequência de semanas: contada para trás a partir da ÚLTIMA semana com
+treino, não da semana corrente
+
+`currentWeekStreak` (`sessions.repo.ts`) agrupa sessões pela segunda-feira da
+semana (`mondayOfWeek`, `lib/date.ts`) e conta semanas consecutivas para trás
+a partir da mais recente que teve pelo menos um treino — não a partir de
+"hoje".
+
+**Motivo:** treino é por semana civil, não por dia — pausar num fim de
+semana é normal e não deveria zerar a sequência antes mesmo da pessoa ter
+tido a chance de treinar de novo. Se a contagem partisse de "hoje", a
+sequência cairia para 0 assim que a semana corrente ainda não tivesse
+treino, mesmo que a pessoa tenha treinado toda semana até aqui. Exibida na
+home só a partir de 2 semanas — 1 semana isolada não é "sequência".

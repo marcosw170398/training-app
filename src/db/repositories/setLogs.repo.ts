@@ -155,6 +155,38 @@ export async function computePersonalRecords(
   return recordes
 }
 
+/**
+ * Sugere subir a carga quando as últimas `minimoConsecutivo` execuções dessa
+ * série já bateram o topo da faixa prescrita — sinal de que o peso atual
+ * ficou fácil demais para continuar estimulando o músculo.
+ *
+ * `topoAlvo` é o topo da faixa ATUAL (pode ter mudado desde os logs antigos,
+ * ex. troca de semana no plano periodizado) — comparar contra ele, não
+ * contra o `targetText` congelado no snapshot do log, é o que faz a
+ * sugestão acompanhar o alvo vigente.
+ */
+export async function progressaoSugerida(
+  profileId: Id,
+  exerciseKey: string,
+  section: Section,
+  seriesNumber: number,
+  topoAlvo: number,
+  minimoConsecutivo = 3,
+): Promise<boolean> {
+  const logs = await db.setLogs
+    .where('[profileId+exerciseKey+section+seriesNumber+performedAt]')
+    .between(
+      [profileId, exerciseKey, section, seriesNumber, Dexie.minKey],
+      [profileId, exerciseKey, section, seriesNumber, Dexie.maxKey],
+    )
+    .reverse()
+    .limit(minimoConsecutivo)
+    .toArray()
+
+  if (logs.length < minimoConsecutivo) return false
+  return logs.every((log) => log.reps !== null && log.reps >= topoAlvo)
+}
+
 export async function deleteSetLog(id: Id): Promise<void> {
   await db.setLogs.delete(id)
 }

@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/date'
 import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Splash } from '@/app/Splash'
+import { bestEstimated1RM } from '@/lib/oneRepMax'
 import { ExerciseProgressChart, type ProgressPoint } from './ExerciseProgressChart'
 
 export function ExerciseHistoryScreen() {
@@ -46,6 +47,7 @@ export function ExerciseHistoryScreen() {
 
   const melhorCarga = pontos.length ? Math.max(...pontos.map((p) => p.topWeight)) : null
   const totalPRs = recordes.size
+  const rm1 = bestEstimated1RM(logs)
 
   return (
     <Screen title={nome} subtitle={`${logs.length} série(s) registrada(s)`} back="/historico">
@@ -60,11 +62,18 @@ export function ExerciseHistoryScreen() {
             <ExerciseProgressChart points={pontos} />
           </Card>
 
-          <div className="mb-4 grid grid-cols-2 gap-3">
+          <div className="mb-4 grid grid-cols-3 gap-3">
             <Card>
               <p className="text-xs text-muted">Melhor carga</p>
               <p className="font-mono text-2xl font-semibold tabular-nums text-text">
                 {melhorCarga} <span className="text-sm text-muted">kg</span>
+              </p>
+            </Card>
+            <Card>
+              <p className="text-xs text-muted">1RM estimado</p>
+              <p className="font-mono text-2xl font-semibold tabular-nums text-text">
+                {rm1 !== null ? Math.round(rm1) : '—'}
+                {rm1 !== null ? <span className="text-sm text-muted"> kg</span> : null}
               </p>
             </Card>
             <Card>

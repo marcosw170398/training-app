@@ -1,5 +1,31 @@
 # Notas de versão
 
+## v0.6.0 — 01/08/2026
+
+### 1RM estimado
+
+O histórico de cada exercício ganhou um terceiro cartão de estatística, ao
+lado de "melhor carga" e "recordes batidos": o 1RM estimado pela fórmula de
+Epley (`peso × (1 + reps/30)`), calculado sobre a maior estimativa entre
+todas as séries "principal" já registradas naquele movimento. Só confiável
+até 12 repetições — séries mais longas não entram na conta.
+
+### Sugestão de progressão de carga
+
+Na execução, uma série pendente mostra "💡 bateu o topo 3x — considere subir
+a carga" quando as últimas 3 execuções daquela mesma série já bateram o topo
+da faixa prescrita (ex: fez 12 três vezes seguidas numa faixa "8-12"). Só
+para séries "principal" com alvo numérico — "até a falha" não tem topo para
+comparar.
+
+### Sequência de semanas treinando
+
+A home mostra "🔥 N semanas seguidas treinando" a partir de 2 semanas
+consecutivas (segunda a domingo) com pelo menos um treino, contadas para
+trás a partir da última semana que teve treino — não da semana corrente, que
+zeraria a sequência assim que a pessoa ainda não tivesse treinado nesta
+semana.
+
 ## v0.5.0 — 31/07/2026
 
 ### Execução mais fluida

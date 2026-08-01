@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 31/07/2026, ao final da sessão que fechou v0.5.0. Editar este
+> Atualizado em 01/08/2026, ao final da sessão que fechou v0.6.0. Editar este
 > arquivo sempre que uma tarefa terminar — é o primeiro arquivo a ler numa
 > sessão nova.
 
@@ -43,10 +43,14 @@ Por versão — detalhe de cada uma em `CHANGELOG.md`:
   lista); carga vazia herda a última usada na sessão; treino encerra sozinho
   ao concluir o último exercício; foto pode ser acrescentada a treino já
   encerrado, pelo histórico.
+- **v0.6.0**: 1RM estimado (Epley) no histórico do exercício; sugestão de
+  progressão de carga na execução, quando as últimas 3 séries bateram o topo
+  da faixa prescrita; sequência de semanas seguidas treinando, exibida na
+  home a partir de 2 semanas.
 
 ## Em desenvolvimento
 
-Nada em andamento no momento — v0.5.0 está publicada em produção.
+Nada em andamento no momento — v0.6.0 está publicada em produção.
 
 ## Problemas conhecidos
 
@@ -66,4 +70,6 @@ Nada em andamento no momento — v0.5.0 está publicada em produção.
 
 Nenhuma tarefa pendente definida pelo usuário. Ver `TODO.md` para backlog
 não priorizado (inclui o gerador de treino por questionário, explicitamente
-adiado, não descartado).
+adiado, não descartado). Peso corporal (body weight tracking) foi cogitado e
+deliberadamente deixado de fora desta rodada — é o único item da lista de
+sugestões que exigiria tabela e tela novas.

@@ -27,7 +27,7 @@ export function ProfileSelectScreen() {
               }}
               className="flex w-full items-center gap-4 rounded-2xl border border-border bg-surface px-4 py-4 text-left active:bg-surface-2"
             >
-              <Avatar name={profile.name} color={profile.color} />
+              <Avatar name={profile.name} color={profile.color} photo={profile.photoBlob} />
               <span className="text-lg font-medium">{profile.name}</span>
             </button>
           </li>

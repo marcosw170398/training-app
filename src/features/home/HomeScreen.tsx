@@ -4,7 +4,7 @@ import { NO_WEEK, type Workout } from '@/db/schema'
 import { getProfileState, markTutorialSeen, setCurrentWeek } from '@/db/repositories/profiles.repo'
 import { getPlan, listPlans } from '@/db/repositories/plans.repo'
 import { listWorkoutsOfWeek } from '@/db/repositories/workouts.repo'
-import { getInProgressSession, lastSessionByWorkout } from '@/db/repositories/sessions.repo'
+import { currentWeekStreak, getInProgressSession, lastSessionByWorkout } from '@/db/repositories/sessions.repo'
 import { useActiveProfile } from '@/state/activeProfile'
 import { daysSince, formatDate, relativeDays } from '@/lib/date'
 import { todayWeekday, weekdayShort } from '@/lib/weekday'
@@ -31,13 +31,14 @@ export function HomeScreen() {
     if (!profileId) return null
 
     const state = await getProfileState(profileId)
-    const [openSession, plans] = await Promise.all([
+    const [openSession, plans, streak] = await Promise.all([
       getInProgressSession(profileId),
       listPlans(profileId),
+      currentWeekStreak(profileId),
     ])
 
     const plan = state.activePlanId ? await getPlan(state.activePlanId) : undefined
-    if (!plan) return { state, plan: null, plans, openSession, rows: [] as WorkoutRow[] }
+    if (!plan) return { state, plan: null, plans, openSession, streak, rows: [] as WorkoutRow[] }
 
     const week = plan.type === 'periodized' ? Math.max(1, state.currentWeekNumber) : NO_WEEK
     const workouts = await listWorkoutsOfWeek(plan.id, week)
@@ -66,12 +67,12 @@ export function HomeScreen() {
       oldest.isSuggested = true
     }
 
-    return { state, plan, plans, openSession, rows, week }
+    return { state, plan, plans, openSession, streak, rows, week }
   }, [profileId])
 
   if (!profile || !data) return <Splash />
 
-  const { state, plan, plans, openSession, rows } = data
+  const { state, plan, plans, openSession, streak, rows } = data
   const week = plan?.type === 'periodized' ? Math.max(1, state.currentWeekNumber) : NO_WEEK
   const daysInWeek = state.weekStartedAt ? daysSince(state.weekStartedAt) : null
 
@@ -85,10 +86,18 @@ export function HomeScreen() {
           aria-label="Trocar de perfil"
           className="shrink-0"
         >
-          <Avatar name={profile.name} color={profile.color} />
+          <Avatar name={profile.name} color={profile.color} photo={profile.photoBlob} />
         </button>
       }
     >
+      {streak >= 2 ? (
+        <p className="mb-4 text-sm text-muted">
+          <span aria-hidden>🔥</span>{' '}
+          <span className="font-mono font-semibold tabular-nums text-text">{streak}</span> semana
+          {streak > 1 ? 's' : ''} seguidas treinando
+        </p>
+      ) : null}
+
       {openSession ? (
         <Card className="mb-4 border-accent/50 bg-accent/10">
           <p className="text-sm text-muted">Treino em andamento</p>

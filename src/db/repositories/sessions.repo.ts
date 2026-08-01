@@ -2,7 +2,7 @@ import Dexie from 'dexie'
 import { db } from '../db'
 import { IN_PROGRESS, type GroupMode, type Id, type Session } from '../schema'
 import { newId } from '@/lib/id'
-import { toDateKey } from '@/lib/date'
+import { mondayOfWeek, toDateKey } from '@/lib/date'
 
 /**
  * Sessão ainda aberta do perfil, se houver. É o que permite retomar um treino
@@ -36,6 +36,28 @@ export function listSessionsBetween(
     .where('[profileId+dateKey]')
     .between([profileId, fromDateKey], [profileId, toDateKey], true, true)
     .toArray()
+}
+
+/**
+ * Semanas seguidas (segunda a domingo) com pelo menos um treino, contadas
+ * para trás a partir da semana mais recente que teve treino — não da semana
+ * corrente. Semana sem treino é normal num programa de força (descanso), não
+ * deveria zerar a sequência se a pessoa simplesmente ainda não treinou hoje.
+ */
+export async function currentWeekStreak(profileId: Id): Promise<number> {
+  const sessions = await db.sessions.where('profileId').equals(profileId).toArray()
+  if (!sessions.length) return 0
+
+  const semanas = new Set(sessions.map((session) => mondayOfWeek(session.dateKey)))
+  const maisRecente = [...semanas].sort().at(-1)!
+
+  let streak = 0
+  let cursor = new Date(`${maisRecente}T12:00`)
+  while (semanas.has(toDateKey(cursor.getTime()))) {
+    streak += 1
+    cursor.setDate(cursor.getDate() - 7)
+  }
+  return streak
 }
 
 /** Última sessão de cada treino — alimenta o "última vez: 10/07/2026" da home. */

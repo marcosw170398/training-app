@@ -66,7 +66,7 @@ export function ProfilesManageScreen() {
           {profiles.map((profile) => (
             <li key={profile.id}>
               <Card className="flex items-center gap-3">
-                <Avatar name={profile.name} color={profile.color} />
+                <Avatar name={profile.name} color={profile.color} photo={profile.photoBlob} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{profile.name}</p>
                   {profile.id === getActiveProfileId() ? (

@@ -63,8 +63,10 @@ export type GroupMode = 'paired' | 'separate'
 export interface Profile {
   id: Id
   name: string
-  /** Cor hex, usada como avatar e acento da UI. */
+  /** Cor hex, usada como avatar e acento da UI (e como borda quando há foto). */
   color: string
+  /** Foto de perfil já reduzida. `null` = sem foto, avatar usa a inicial do nome. */
+  photoBlob: Blob | null
   order: number
   createdAt: number
 }

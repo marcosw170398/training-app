@@ -39,13 +39,18 @@ function defaultState(profileId: Id): ProfileState {
   }
 }
 
-export async function createProfile(input: { name: string; color: string }): Promise<Profile> {
+export async function createProfile(input: {
+  name: string
+  color: string
+  photoBlob?: Blob | null
+}): Promise<Profile> {
   const id = newId()
   const count = await db.profiles.count()
   const profile: Profile = {
     id,
     name: input.name.trim(),
     color: input.color,
+    photoBlob: input.photoBlob ?? null,
     order: count,
     createdAt: Date.now(),
   }
@@ -58,7 +63,7 @@ export async function createProfile(input: { name: string; color: string }): Pro
 
 export async function updateProfile(
   id: Id,
-  patch: Partial<Pick<Profile, 'name' | 'color' | 'order'>>,
+  patch: Partial<Pick<Profile, 'name' | 'color' | 'order' | 'photoBlob'>>,
 ): Promise<void> {
   await db.profiles.update(id, patch)
 }

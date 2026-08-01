@@ -59,6 +59,16 @@ export function firstWeekdayOfMonth(year: number, month: number): number {
   return js === 0 ? 7 : js
 }
 
+/** Segunda-feira da semana que contém `dateKey`, no mesmo formato `dateKey`. */
+export function mondayOfWeek(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const d = new Date(year, month - 1, day)
+  const js = d.getDay()
+  const deltaParaSegunda = js === 0 ? -6 : 1 - js
+  d.setDate(d.getDate() + deltaParaSegunda)
+  return toDateKey(d.getTime())
+}
+
 /** Duração em segundos -> "1:05" ou "12:05". */
 export function formatClock(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds))

@@ -24,6 +24,7 @@ import {
   lastSetsForExercise,
   listSetLogsOfSession,
   logSet,
+  progressaoSugerida,
   updateSetLog,
 } from '@/db/repositories/setLogs.repo'
 import { useActiveProfile } from '@/state/activeProfile'
@@ -117,6 +118,29 @@ export function SessionScreen() {
       )
     }
 
+    // Sugestão de progressão: só para séries "principal" cujo alvo prescrito
+    // descreve uma faixa de repetições numérica (repsFromTarget) — sem topo
+    // definido não há "bateu o topo" para comparar.
+    const progressaoPorSerie = new Map<string, boolean>()
+    await Promise.all(
+      exercises
+        .filter((exercise) => exercise.section === 'main')
+        .flatMap((exercise) =>
+          (seriesByExercise.get(exercise.id) ?? []).map(async (target) => {
+            const topoAlvo = repsFromTarget(target.targetText)
+            if (topoAlvo === null) return
+            const sugerida = await progressaoSugerida(
+              profileId,
+              exercise.exerciseKey,
+              exercise.section,
+              target.seriesNumber,
+              topoAlvo,
+            )
+            if (sugerida) progressaoPorSerie.set(logKey(exercise.id, target.seriesNumber), true)
+          }),
+        ),
+    )
+
     // Recordes só dos movimentos que já têm série registrada nesta sessão —
     // computar para todo exercício do treino seria trabalho descartado para
     // o que ainda nem foi feito.
@@ -128,7 +152,16 @@ export function SessionScreen() {
       }),
     )
 
-    return { session, state, exercises, seriesByExercise, logs, prefills, recordesPorMovimento }
+    return {
+      session,
+      state,
+      exercises,
+      seriesByExercise,
+      logs,
+      prefills,
+      recordesPorMovimento,
+      progressaoPorSerie,
+    }
   }, [sessionId, profileId])
 
   const prefs = {
@@ -152,7 +185,16 @@ export function SessionScreen() {
     )
   }
 
-  const { session, state, exercises, seriesByExercise, logs, prefills, recordesPorMovimento } = data
+  const {
+    session,
+    state,
+    exercises,
+    seriesByExercise,
+    logs,
+    prefills,
+    recordesPorMovimento,
+    progressaoPorSerie,
+  } = data
 
   const logsByKey = new Map<string, SetLog>()
   for (const log of logs) logsByKey.set(logKey(log.exerciseId, log.seriesNumber), log)
@@ -430,6 +472,7 @@ export function SessionScreen() {
             log={log}
             isPR={log ? (recordesPorMovimento.get(exercise.exerciseKey)?.has(log.id) ?? false) : false}
             prefill={prefills.get(exercise.id)?.get(row.seriesNumber)}
+            progressao={progressaoPorSerie.has(chave)}
             isExtra={row.isExtra}
             draft={drafts[chave]}
             defaultDraft={defaultDraftFor(exercise, row)}
@@ -688,6 +731,7 @@ export function SessionScreen() {
                                           prefill={prefills
                                             .get(exercise.id)
                                             ?.get(row.seriesNumber)}
+                                          progressao={progressaoPorSerie.has(chave)}
                                           isExtra={row.isExtra}
                                           draft={drafts[chave]}
                                           defaultDraft={defaultDraftFor(exercise, row)}

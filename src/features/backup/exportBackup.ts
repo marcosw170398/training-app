@@ -23,7 +23,8 @@ export async function buildBackup(profileIds?: Id[]) {
   return {
     schemaVersion: BACKUP_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
-    profiles,
+    // Foto de perfil é blob binário — mesma decisão de não incluir foto de treino no backup.
+    profiles: profiles.map(({ photoBlob: _ignorada, ...resto }) => resto),
     plans,
     workouts,
     exercises,

@@ -18,6 +18,7 @@ export function SetRow({
   log,
   isPR,
   prefill,
+  progressao,
   isExtra,
   draft,
   defaultDraft,
@@ -35,6 +36,8 @@ export function SetRow({
   isPR?: boolean
   /** Última execução deste movimento/série — origem da carga sugerida. */
   prefill?: SetLog
+  /** As últimas execuções bateram o topo da faixa — hora de subir a carga. */
+  progressao?: boolean
   isExtra: boolean
   draft: SetDraft | undefined
   defaultDraft: SetDraft
@@ -148,6 +151,9 @@ export function SetRow({
             {isExtra ? <span className="text-muted"> · extra</span> : null}
           </p>
           {restText ? <p className="text-xs text-muted">descanso {restText}</p> : null}
+          {progressao ? (
+            <p className="text-xs font-medium text-main">💡 bateu o topo 3x — considere subir a carga</p>
+          ) : null}
         </div>
         {prefill ? (
           <p className="shrink-0 text-right text-xs text-muted">
