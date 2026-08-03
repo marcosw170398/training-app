@@ -30,6 +30,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     tip: 'No plano periodizado, monte a Semana 01 e use "Copiar semana" — depois é só ajustar o que mudou.',
   },
   {
+    icon: '🔗',
+    title: 'Bi-set: dois exercícios juntos',
+    body: 'Ao criar ou editar um exercício, preencha "Grupo de bi-set" com a mesma letra nos dois que devem ser feitos em sequência (ex: A nos dois). Na execução eles aparecem juntos, alternando uma série de cada.',
+    tip: 'Fez os dois separados dessa vez? Na execução, ao lado de "Em bi-set" tem o botão "Separado" — muda a qualquer momento, sem editar o plano.',
+  },
+  {
     icon: '🏋️',
     title: 'Treinar é tocar no treino do dia',
     body: 'A tela de execução separa a Preparação (aquecimento, mobilidade) dos exercícios principais. A preparação só tem um "feito" para marcar — ela não registra carga, para não sujar seu histórico de evolução.',

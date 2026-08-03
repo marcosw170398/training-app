@@ -11,7 +11,7 @@ import { WorkoutEditorScreen } from '@/features/plans/WorkoutEditorScreen'
 import { HistoryScreen } from '@/features/history/HistoryScreen'
 import { ExerciseHistoryScreen } from '@/features/history/ExerciseHistoryScreen'
 import { MoreScreen } from '@/features/settings/MoreScreen'
-import { StartSessionScreen } from '@/features/session/StartSessionScreen'
+import { WorkoutPreviewScreen } from '@/features/session/WorkoutPreviewScreen'
 import { SessionScreen } from '@/features/session/SessionScreen'
 
 export const router = createBrowserRouter([
@@ -43,7 +43,7 @@ export const router = createBrowserRouter([
       { path: '/historico/ex/:exerciseKey', element: <ExerciseHistoryScreen /> },
       { path: '/planos/:planId', element: <PlanEditorScreen /> },
       { path: '/planos/:planId/t/:workoutId', element: <WorkoutEditorScreen /> },
-      { path: '/treinar/:workoutId', element: <StartSessionScreen /> },
+      { path: '/treinar/:workoutId', element: <WorkoutPreviewScreen /> },
       { path: '/sessao/:sessionId', element: <SessionScreen /> },
     ],
   },

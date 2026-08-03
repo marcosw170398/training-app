@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 01/08/2026, ao final da sessão que fechou v0.6.0. Editar este
+> Atualizado em 03/08/2026, ao final da sessão que fechou v0.7.0. Editar este
 > arquivo sempre que uma tarefa terminar — é o primeiro arquivo a ler numa
 > sessão nova.
 
@@ -50,12 +50,17 @@ Por versão — detalhe de cada uma em `CHANGELOG.md`:
   sugestão de progressão de carga na execução, quando as últimas 3 séries
   bateram o topo da faixa prescrita; sequência de semanas seguidas
   treinando, exibida na home a partir de 2 semanas.
+- **v0.7.0**: abrir um treino só mostra os exercícios (`WorkoutPreviewScreen`
+  em `/treinar/:id`) — só inicia com clique explícito em "Iniciar treino",
+  com confirmação se outro treino já estiver em andamento; sessão esquecida
+  encerra sozinha (2h ociosa ou 4h de duração, checado em
+  `reapStaleSession`); Histórico ganhou "Editar" (reabre a sessão) e
+  "Excluir" por treino; tutorial ganhou passo de bi-set.
 
 ## Em desenvolvimento
 
-Nada em andamento no momento — v0.6.0 (1RM, progressão, sequência de
-semanas, foto de perfil) já está commitada, publicada no GitHub e em
-produção no Vercel.
+Nada em andamento no momento — v0.7.0 já está commitada, publicada no
+GitHub e em produção no Vercel.
 
 ## Problemas conhecidos
 

@@ -4,13 +4,49 @@ import { IN_PROGRESS, type GroupMode, type Id, type Session } from '../schema'
 import { newId } from '@/lib/id'
 import { mondayOfWeek, toDateKey } from '@/lib/date'
 
+const IDLE_LIMIT_MS = 2 * 60 * 60 * 1000
+const MAX_DURATION_MS = 4 * 60 * 60 * 1000
+
+/** Instante em que uma sessão esquecida deveria ter sido encerrada, se for o caso. */
+async function staleCutoff(session: Session): Promise<number | null> {
+  const logs = await db.setLogs.where('sessionId').equals(session.id).toArray()
+  const lastActivity = logs.length ? Math.max(...logs.map((log) => log.performedAt)) : session.startedAt
+  const idleCutoff = lastActivity + IDLE_LIMIT_MS
+  const durationCutoff = session.startedAt + MAX_DURATION_MS
+  const cutoff = Math.min(idleCutoff, durationCutoff)
+  return Date.now() > cutoff ? cutoff : null
+}
+
 /**
  * Sessão ainda aberta do perfil, se houver. É o que permite retomar um treino
  * interrompido (bateria acabou, saiu da academia e voltou) em vez de deixar
  * SetLogs órfãos soltos no histórico.
+ *
+ * Uma sessão esquecida (2h sem nenhuma série registrada, ou 4h de duração
+ * total) já é tratada como encerrada aqui — só a LEITURA, sem gravar nada.
+ * `useLiveQuery` proíbe escrita dentro da própria query reativa; quem quiser
+ * de fato encerrar a sessão travada no banco chama `reapStaleSession`
+ * separadamente (fora do contexto do liveQuery).
  */
 export async function getInProgressSession(profileId: Id): Promise<Session | undefined> {
-  return db.sessions.where('[profileId+finishedAt]').equals([profileId, IN_PROGRESS]).first()
+  const open = await db.sessions.where('[profileId+finishedAt]').equals([profileId, IN_PROGRESS]).first()
+  if (!open) return undefined
+  if (await staleCutoff(open)) return undefined
+  return open
+}
+
+/**
+ * Encerra de fato, no banco, uma sessão esquecida do perfil — chamar fora de
+ * `useLiveQuery` (ex.: um `useEffect` comum no layout). Encerra no instante
+ * do corte (2h de ociosidade ou 4h de duração), não em "agora" — senão o
+ * treino aparece no histórico com uma duração absurda (o tempo até alguém
+ * reabrir o app).
+ */
+export async function reapStaleSession(profileId: Id): Promise<void> {
+  const open = await db.sessions.where('[profileId+finishedAt]').equals([profileId, IN_PROGRESS]).first()
+  if (!open) return
+  const cutoff = await staleCutoff(open)
+  if (cutoff !== null) await db.sessions.update(open.id, { finishedAt: cutoff })
 }
 
 export function getSession(id: Id): Promise<Session | undefined> {

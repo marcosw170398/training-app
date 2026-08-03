@@ -201,3 +201,39 @@ deliberado (ver comentário em `exercises.repo.ts` → `addSeries`); o problema
 era só a falta de seleção ao focar. Editar um treino já existente
 (`workout` presente em `WorkoutFormSheet`) fica de fora de propósito —
 apagar ali é ação deliberada do usuário, não teria o mesmo problema.
+
+---
+
+### 16. Abrir um treino nunca inicia/encerra sessão sozinho
+
+`/treinar/:workoutId` (`WorkoutPreviewScreen.tsx`) só MOSTRA os exercícios.
+Sessão só começa com clique explícito em "Iniciar treino"; se houver outro
+treino em andamento, pede confirmação antes de encerrá-lo — o mesmo padrão
+de "Encerrar treino?" que a execução já usava.
+
+**Motivo:** bug real — a versão anterior (`StartSessionScreen.tsx`, agora
+removida) chamava `startOrResumeSession` assim que a rota abria. Tocar num
+treino errado por engano, com outro em andamento, encerrava o antigo e
+começava um novo sem perguntar nada — irreversível pela UI (a sessão
+"perdida" só reaparecia editável de novo depois da funcionalidade #17, que
+não existia ainda). Pedido explícito do usuário para nunca mais iniciar ou
+encerrar automaticamente por só abrir a tela.
+
+---
+
+### 17. Sessão esquecida: `useLiveQuery` não pode escrever — leitura e reaper separados
+
+`getInProgressSession` (usada dentro de `useLiveQuery` em `HomeScreen` e
+`WorkoutPreviewScreen`) faz só LEITURA: se a sessão passou de 2h ociosa
+(sem `SetLog` novo) ou 4h de duração total, devolve `undefined` sem gravar
+nada. Quem grava de fato o encerramento é `reapStaleSession`, chamada à
+parte por um `useEffect` comum (com um `setInterval` de 5 min) em
+`RequireProfile.tsx` — fora de qualquer query reativa.
+
+**Motivo:** a primeira versão fazia `db.sessions.update(...)` dentro da
+própria função passada pro `useLiveQuery`. Dexie proíbe escrita dentro do
+contexto de uma query reativa (`Readwrite transaction in liveQuery
+context`) e isso derrubava a `HomeScreen` inteira com uma tela de erro —
+reproduzido no navegador simulando uma sessão de 5h. Separar leitura
+(segura dentro do liveQuery) de escrita (só fora dele) é a regra geral para
+qualquer auto-correção futura que dependa de `getInProgressSession`.

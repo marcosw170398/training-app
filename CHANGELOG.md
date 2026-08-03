@@ -1,5 +1,34 @@
 # Notas de versão
 
+## v0.7.0 — 03/08/2026
+
+### Abrir um treino só mostra, nunca inicia sozinho
+
+Tocar num treino na home (ou com outro já em andamento) abria a execução na
+hora — e se houvesse outro treino aberto, ele era encerrado sem perguntar.
+Agora `/treinar/:id` é só uma prévia com a lista de exercícios; só o botão
+"Iniciar treino" começa a sessão. Se outro treino já estiver em andamento,
+pede confirmação antes de encerrá-lo — o mesmo padrão que "Encerrar treino"
+já usava.
+
+### Sessão esquecida encerra sozinha
+
+Uma sessão aberta sem nenhuma série registrada por 2h, ou com mais de 4h de
+duração total, é encerrada automaticamente na próxima vez que o app é
+aberto — no horário do corte, não em "agora", para a duração no histórico
+não ficar absurda.
+
+### Editar ou excluir um treino do histórico
+
+Todo treino no Histórico ganhou "Editar" (reabre a sessão para corrigir
+exercício esquecido ou carga errada, reusando a própria tela de execução) e
+"Excluir" (apaga o treino e as séries registradas nele, com confirmação).
+
+### Tutorial: bi-set
+
+Novo passo explicando como marcar "Grupo de bi-set" para dois exercícios
+serem executados juntos — não estava claro que esse campo existia.
+
 ## v0.6.0 — 01/08/2026
 
 ### Foto de perfil

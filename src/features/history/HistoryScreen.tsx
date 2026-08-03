@@ -2,8 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
-import type { Id } from '@/db/schema'
-import { listSessions, updateSessionNotes } from '@/db/repositories/sessions.repo'
+import type { Id, Session } from '@/db/schema'
+import {
+  deleteSessionCascade,
+  finishSession,
+  listSessions,
+  reopenSession,
+  updateSessionNotes,
+} from '@/db/repositories/sessions.repo'
 import { listLoggedExercises, listSetLogsOfSession } from '@/db/repositories/setLogs.repo'
 import { addSessionPhoto, deletePhoto, listPhotosOfSession } from '@/db/repositories/photos.repo'
 import { useActiveProfile } from '@/state/activeProfile'
@@ -12,6 +18,7 @@ import { Screen } from '@/components/ui/Screen'
 import { Card, EmptyState } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Chevron } from '@/components/ui/Chevron'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Splash } from '@/app/Splash'
 import { TrainingCalendar } from './TrainingCalendar'
 import { SessionNotesField } from './SessionNotesField'
@@ -28,6 +35,8 @@ export function HistoryScreen() {
   const fotoInputRef = useRef<HTMLInputElement>(null)
   const [salvandoFoto, setSalvandoFoto] = useState(false)
   const [erroFoto, setErroFoto] = useState<string | null>(null)
+  const [toDelete, setToDelete] = useState<Session | null>(null)
+  const [toEdit, setToEdit] = useState<Session | null>(null)
 
   const sessions = useLiveQuery(async () => {
     if (!profileId) return null
@@ -82,6 +91,24 @@ export function HistoryScreen() {
     } finally {
       setSalvandoFoto(false)
     }
+  }
+
+  const sessaoEmAndamento = sessions.find(({ session }) => session.finishedAt === 0)?.session
+
+  /**
+   * Reabre um treino já encerrado para corrigir (marcar exercício esquecido,
+   * ajustar carga) — reusa a própria tela de execução em vez de duplicar a
+   * lógica de edição. Só existe UMA sessão aberta por vez no app inteiro
+   * (`startOrResumeSession` conta com isso); se já houver outra em
+   * andamento, encerra ela antes, com confirmação explícita.
+   */
+  const editarSessao = async (session: Session) => {
+    if (sessaoEmAndamento && sessaoEmAndamento.id !== session.id) {
+      setToEdit(session)
+      return
+    }
+    await reopenSession(session.id)
+    navigate(`/sessao/${session.id}`)
   }
 
   const visiveis = diaSelecionado
@@ -274,6 +301,22 @@ export function HistoryScreen() {
                               ))
                             )}
                           </div>
+
+                          <div className="flex gap-2 border-t border-border pt-3">
+                            {session.finishedAt !== 0 ? (
+                              <Button size="sm" full onClick={() => void editarSessao(session)}>
+                                Editar
+                              </Button>
+                            ) : null}
+                            <Button
+                              size="sm"
+                              full
+                              variant="danger"
+                              onClick={() => setToDelete(session)}
+                            >
+                              Excluir
+                            </Button>
+                          </div>
                         </div>
                       ) : null}
                     </Card>
@@ -284,6 +327,41 @@ export function HistoryScreen() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        danger
+        title="Excluir esse treino?"
+        confirmLabel="Excluir treino"
+        description="Todas as séries registradas nesse dia são apagadas. Não pode ser desfeito."
+        onClose={() => setToDelete(null)}
+        onConfirm={() => {
+          if (!toDelete) return
+          if (expanded === toDelete.id) setExpanded(null)
+          void deleteSessionCascade(toDelete.id)
+        }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(toEdit)}
+        title="Encerrar o treino em andamento?"
+        confirmLabel="Encerrar e editar"
+        description={
+          <p>
+            <span className="font-medium text-text">{sessaoEmAndamento?.workoutName}</span> está em
+            andamento. Ele será encerrado para reabrir este treino.
+          </p>
+        }
+        onClose={() => setToEdit(null)}
+        onConfirm={() => {
+          if (!toEdit || !sessaoEmAndamento) return
+          void (async () => {
+            await finishSession(sessaoEmAndamento.id)
+            await reopenSession(toEdit.id)
+            navigate(`/sessao/${toEdit.id}`)
+          })()
+        }}
+      />
     </Screen>
   )
 }
