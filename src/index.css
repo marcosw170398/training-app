@@ -76,6 +76,24 @@
   --color-danger: #d6295a;
 }
 
+/* Marca Marcosoft: traço preto sobre transparente, pensado para fundo claro.
+   Invertido por padrão (escuro é o tema incondicional) — mesma cascata dos
+   tokens de cor acima, para o traço virar branco sozinho onde o fundo é
+   escuro e voltar a preto onde é claro. */
+.marcosoft-mark {
+  filter: invert(1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .marcosoft-mark {
+    filter: none;
+  }
+}
+
+:root[data-theme='light'] .marcosoft-mark {
+  filter: none;
+}
+
 @layer base {
   html {
     background-color: var(--color-bg);

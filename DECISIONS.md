@@ -237,3 +237,19 @@ context`) e isso derrubava a `HomeScreen` inteira com uma tela de erro —
 reproduzido no navegador simulando uma sessão de 5h. Separar leitura
 (segura dentro do liveQuery) de escrita (só fora dele) é a regra geral para
 qualquer auto-correção futura que dependa de `getInProgressSession`.
+
+---
+
+### 18. Marca Marcosoft: `filter: invert(1)` em vez de duas imagens
+
+`public/marcosoft-mark.png` é um traço preto sobre transparente, pensado
+para fundo claro. Em vez de gerar/manter uma segunda versão em branco para
+o tema escuro, a classe `.marcosoft-mark` (`index.css`) aplica
+`filter: invert(1)` por padrão e remove o filtro (`filter: none`) sob a
+mesma cascata `@media (prefers-color-scheme: light)` /
+`[data-theme='light']` que já decide as cores do resto do app.
+
+**Motivo:** preto vira branco, transparente continua transparente — um
+`invert(1)` resolve os dois temas com um arquivo só, sem depender de
+recriar a arte a cada ajuste. Só funciona porque o traço é uma cor sólida
+(preto); uma imagem colorida quebraria com invert simples.

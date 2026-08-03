@@ -1,6 +1,6 @@
 # Estado do projeto
 
-> Atualizado em 03/08/2026, ao final da sessão que fechou v0.7.0. Editar este
+> Atualizado em 03/08/2026, ao final da sessão que fechou v0.8.0. Editar este
 > arquivo sempre que uma tarefa terminar — é o primeiro arquivo a ler numa
 > sessão nova.
 
@@ -56,11 +56,18 @@ Por versão — detalhe de cada uma em `CHANGELOG.md`:
   encerra sozinha (2h ociosa ou 4h de duração, checado em
   `reapStaleSession`); Histórico ganhou "Editar" (reabre a sessão) e
   "Excluir" por treino; tutorial ganhou passo de bi-set.
+- **v0.8.0**: autoria Marcosoft — rodapé em "Mais" (`Treino v0.7.0 · feito
+  pela Marcosoft`), selo no fim do tutorial ("um app Marcosoft"), e a marca
+  (`public/marcosoft-mark.png`, traço preto sobre transparente) na tela de
+  carregamento (`Splash.tsx`), invertida para branco no tema escuro via
+  `.marcosoft-mark` em `index.css` — mesma cascata de `[data-theme]` /
+  `prefers-color-scheme` dos tokens de cor.
 
 ## Em desenvolvimento
 
-Nada em andamento no momento — v0.7.0 já está commitada, publicada no
-GitHub e em produção no Vercel.
+Nada em andamento no código — v0.7.0 e v0.8.0 estão commitadas
+**localmente**, ainda não publicadas no GitHub nem em produção (deploy
+pendente, aguardando confirmação do usuário).
 
 ## Problemas conhecidos
 

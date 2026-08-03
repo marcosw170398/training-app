@@ -79,6 +79,8 @@ export function TutorialOverlay({ onFinish }: { onFinish: () => void }) {
               {isLast ? 'Começar a treinar' : 'Próximo'}
             </Button>
           </div>
+
+          {isLast ? <p className="mt-3 text-center text-xs text-muted">um app Marcosoft</p> : null}
         </div>
       </div>
     </div>

@@ -1,5 +1,16 @@
 # Notas de versão
 
+## v0.8.0 — 03/08/2026
+
+### Autoria Marcosoft
+
+O app agora se identifica como um produto Marcosoft, em três lugares
+discretos: um rodapé em "Mais" (`Treino v0.8.0 · feito pela Marcosoft`), uma
+linha no fim do tutorial ("um app Marcosoft"), e a marca na tela de
+carregamento — traço preto sobre fundo transparente, que vira branco
+sozinho no tema escuro (mesma cascata de tema que o resto do app já usa
+para cor).
+
 ## v0.7.0 — 03/08/2026
 
 ### Abrir um treino só mostra, nunca inicia sozinho

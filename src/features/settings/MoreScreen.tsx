@@ -175,6 +175,11 @@ export function MoreScreen() {
         </Button>
       </Card>
 
+      <p className="mt-6 text-center text-xs text-muted">
+        Treino <span className="font-mono">v0.8.0</span> · feito pela{' '}
+        <span className="text-accent">Marcosoft</span>
+      </p>
+
       <Sheet open={pendingFile !== null} title="Importar plano" onClose={() => setPendingFile(null)}>
         <p className="mb-4 text-sm text-muted">
           Onde os dados do arquivo devem entrar? Todos os ids são recriados, então importar não
